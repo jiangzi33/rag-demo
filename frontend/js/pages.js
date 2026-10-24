@@ -1,6 +1,9 @@
 const { ref, reactive, onMounted, computed } = Vue
 const { ElMessage, ElMessageBox } = ElementPlus
 
+// 登录 / 注册后的默认落地页
+const HOME_PATH = '/kb'
+
 const confirmRule = (form, field = 'password') => ({
   validator: (_, value, cb) => (value === form[field] ? cb() : cb(new Error('两次输入的密码不一致'))),
   trigger: 'blur',
@@ -40,7 +43,9 @@ const LoginPage = {
       try {
         auth.setLogin(await api.login(form))
         ElMessage.success('登录成功')
-        router.replace(route.query.redirect || '/profile')
+        // 只有登录前访问的是某个知识库页面时才回到原页面，其余一律进入知识库主页
+        const redirect = route.query.redirect
+        router.replace(typeof redirect === 'string' && redirect.startsWith('/kb') ? redirect : HOME_PATH)
       } finally {
         loading.value = false
       }
@@ -92,7 +97,7 @@ const RegisterPage = {
         const { confirm, ...payload } = form
         auth.setLogin(await api.register({ ...payload, nickname: payload.nickname || null }))
         ElMessage.success('注册成功')
-        router.replace('/profile')
+        router.replace(HOME_PATH)
       } finally {
         loading.value = false
       }
@@ -319,5 +324,282 @@ const AdminUsersPage = {
 
     onMounted(load)
     return { me, loading, list, total, query, load, search, toggleVip, changeStatus, formatTime, USER_STATUS }
+  },
+}
+
+// ---------------- 知识库：创建 / 编辑弹窗 ----------------
+// 传入 kb 时为编辑，否则为创建；保存成功后触发 saved(知识库)
+const KbFormDialog = {
+  props: { modelValue: Boolean, kb: Object },
+  emits: ['update:modelValue', 'saved'],
+  template: `
+  <el-dialog :model-value="modelValue" :title="kb ? '编辑知识库' : '新建知识库'" width="440px"
+             @update:model-value="$emit('update:modelValue', $event)" @open="onOpen" @opened="focus">
+    <el-form ref="formRef" :model="form" :rules="formRules" label-position="top" @submit.prevent="submit">
+      <el-form-item label="知识库名称" prop="name">
+        <el-input ref="inputRef" v-model="form.name" maxlength="64" show-word-limit placeholder="例如：产品文档" />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="$emit('update:modelValue', false)">取消</el-button>
+      <el-button type="primary" :loading="saving" @click="submit">{{ kb ? '保存' : '创建' }}</el-button>
+    </template>
+  </el-dialog>`,
+  setup(props, { emit }) {
+    const formRef = ref()
+    const inputRef = ref()
+    const saving = ref(false)
+    const form = reactive({ name: '' })
+    const formRules = { name: rules.kbName }
+
+    const onOpen = () => {
+      form.name = props.kb?.name || ''
+      formRef.value?.clearValidate()
+    }
+    const focus = () => inputRef.value?.focus()
+    const submit = async () => {
+      if (!(await formRef.value.validate().catch(() => false))) return
+      saving.value = true
+      try {
+        const data = { name: form.name.trim() }
+        const kb = props.kb ? await api.updateKb(props.kb.id, data) : await api.createKb(data)
+        ElMessage.success(props.kb ? '已保存' : '创建成功')
+        emit('update:modelValue', false)
+        emit('saved', kb)
+      } finally {
+        saving.value = false
+      }
+    }
+    return { formRef, inputRef, saving, form, formRules, onOpen, focus, submit }
+  },
+}
+
+const confirmDeleteKb = async (kb) => {
+  const ok = await ElMessageBox.confirm(
+    `知识库及其中的所有文档都将被删除且不可恢复，确定要删除「${kb.name}」吗？`, '删除知识库',
+    { type: 'warning', confirmButtonText: '删除', confirmButtonClass: 'el-button--danger' },
+  ).catch(() => false)
+  if (!ok) return false
+  await api.deleteKb(kb.id)
+  ElMessage.success('已删除')
+  return true
+}
+
+// ---------------- 知识库主页 ----------------
+const KbListPage = {
+  components: { KbFormDialog },
+  template: `
+  <div class="page">
+    <div class="kb-toolbar">
+      <h2 class="page-title">我的知识库</h2>
+      <el-input v-model="query.keyword" placeholder="搜索知识库名称" clearable class="kb-search"
+                @keyup.enter="search" @clear="search" />
+      <el-button type="primary" @click="openCreate">+ 新建知识库</el-button>
+    </div>
+
+    <div v-loading="loading" class="kb-body">
+      <el-empty v-if="!loading && !list.length" :description="query.keyword ? '没有匹配的知识库' : '还没有知识库'">
+        <el-button v-if="!query.keyword" type="primary" @click="openCreate">创建第一个知识库</el-button>
+      </el-empty>
+      <el-row v-else :gutter="16">
+        <el-col v-for="kb in list" :key="kb.id" :xs="24" :sm="12" :lg="8">
+          <el-card shadow="hover" class="kb-card" @click="$router.push('/kb/' + kb.id)">
+            <div class="kb-card-head">
+              <div class="kb-icon">{{ kb.name.slice(0, 1) }}</div>
+              <div class="kb-name" :title="kb.name">{{ kb.name }}</div>
+              <span @click.stop>
+              <el-dropdown trigger="click" @command="(cmd) => onCommand(cmd, kb)">
+                <el-button link class="kb-more">···</el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item command="detail">查看详情</el-dropdown-item>
+                    <el-dropdown-item command="edit">编辑</el-dropdown-item>
+                    <el-dropdown-item command="delete" divided class="danger-item">删除</el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+              </span>
+            </div>
+            <div class="muted kb-meta">
+              管理员：{{ kb.owner?.nickname || '-' }} · 更新于 {{ formatTime(kb.updated_at) }}
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
+    </div>
+
+    <el-pagination v-if="total > query.size" class="pager" background layout="total, prev, pager, next"
+      :total="total" v-model:current-page="query.page" :page-size="query.size" @current-change="load" />
+
+    <kb-form-dialog v-model="dialog.visible" :kb="dialog.kb" @saved="load" />
+  </div>`,
+  setup() {
+    const router = VueRouter.useRouter()
+    const loading = ref(false)
+    const list = ref([])
+    const total = ref(0)
+    const query = reactive({ page: 1, size: 12, keyword: '' })
+    const dialog = reactive({ visible: false, kb: null })
+
+    const load = async () => {
+      loading.value = true
+      try {
+        const params = { page: query.page, size: query.size, keyword: query.keyword || undefined }
+        const data = await api.listKbs(params)
+        // 删除最后一页的最后一条后回退一页
+        if (!data.items.length && query.page > 1) {
+          query.page -= 1
+          return load()
+        }
+        list.value = data.items
+        total.value = data.total
+      } finally {
+        loading.value = false
+      }
+    }
+    const search = () => { query.page = 1; load() }
+
+    const openCreate = () => Object.assign(dialog, { visible: true, kb: null })
+    const onCommand = async (cmd, kb) => {
+      if (cmd === 'detail') router.push('/kb/' + kb.id)
+      else if (cmd === 'edit') Object.assign(dialog, { visible: true, kb })
+      else if (cmd === 'delete' && (await confirmDeleteKb(kb))) load()
+    }
+
+    onMounted(load)
+    return { loading, list, total, query, dialog, load, search, openCreate, onCommand, formatTime }
+  },
+}
+
+// ---------------- 知识库详情（含文档列表） ----------------
+// 文档只能在知识库内创建和浏览，没有独立的文档入口
+const KbDetailPage = {
+  components: { KbFormDialog },
+  template: `
+  <div class="page">
+    <el-page-header @back="$router.push('/kb')" class="kb-header">
+      <template #content><span class="page-title">{{ kb?.name || '知识库详情' }}</span></template>
+      <template #extra v-if="kb">
+        <el-button @click="editing = true">编辑知识库</el-button>
+        <el-button type="danger" plain @click="remove">删除知识库</el-button>
+      </template>
+    </el-page-header>
+
+    <el-card shadow="never" v-loading="loading" class="kb-info">
+      <el-descriptions v-if="kb" :column="isNarrow ? 1 : 2" border size="small">
+        <el-descriptions-item label="管理员">
+          <div class="user-cell" v-if="kb.owner">
+            <el-avatar :size="22" :src="kb.owner.avatar">{{ kb.owner.nickname.slice(0, 1) }}</el-avatar>
+            <span>{{ kb.owner.nickname }}</span><span class="muted">@{{ kb.owner.username }}</span>
+          </div>
+          <span v-else class="muted">用户已删除</span>
+        </el-descriptions-item>
+        <el-descriptions-item label="知识库ID">{{ kb.id }}</el-descriptions-item>
+        <el-descriptions-item label="创建时间">{{ formatTime(kb.created_at) }}</el-descriptions-item>
+        <el-descriptions-item label="更新时间">{{ formatTime(kb.updated_at) }}</el-descriptions-item>
+      </el-descriptions>
+      <el-empty v-else-if="!loading" description="知识库不存在或无权访问">
+        <el-button type="primary" @click="$router.push('/kb')">返回知识库列表</el-button>
+      </el-empty>
+    </el-card>
+
+    <el-card v-if="kb" shadow="never">
+      <div class="kb-toolbar">
+        <h3 class="section-title">文档 <span class="muted">{{ docTotal }}</span></h3>
+        <el-input v-model="docQuery.keyword" placeholder="搜索文档标题" clearable class="kb-search"
+                  @keyup.enter="searchDocs" @clear="searchDocs" />
+        <el-button type="primary" @click="$router.push(docBase + '/new')">+ 新建文档</el-button>
+      </div>
+
+      <el-empty v-if="!docLoading && !docs.length" :description="docQuery.keyword ? '没有匹配的文档' : '这个知识库还没有文档'">
+        <el-button v-if="!docQuery.keyword" type="primary" @click="$router.push(docBase + '/new')">写第一篇文档</el-button>
+      </el-empty>
+      <el-table v-else :data="docs" v-loading="docLoading" @row-click="(row) => $router.push(docBase + '/' + row.id)"
+                row-class-name="clickable-row">
+        <el-table-column label="标题" min-width="220">
+          <template #default="{ row }"><span class="doc-title-cell">{{ row.title }}</span></template>
+        </el-table-column>
+        <el-table-column label="作者" width="140">
+          <template #default="{ row }">{{ row.author?.nickname || '-' }}</template>
+        </el-table-column>
+        <el-table-column label="最近编辑" width="170">
+          <template #default="{ row }">{{ formatTime(row.updated_at) }}</template>
+        </el-table-column>
+        <el-table-column label="发布日期" width="170">
+          <template #default="{ row }">{{ formatTime(row.published_at) }}</template>
+        </el-table-column>
+        <el-table-column label="操作" width="150" fixed="right">
+          <template #default="{ row }">
+            <span @click.stop>
+              <el-button link type="primary" @click="$router.push(docBase + '/' + row.id)">查看</el-button>
+              <el-button link type="primary" @click="$router.push(docBase + '/' + row.id + '/edit')">编辑</el-button>
+              <el-button link type="danger" @click="removeDoc(row)">删除</el-button>
+            </span>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <el-pagination v-if="docTotal > docQuery.size" class="pager" background layout="total, prev, pager, next"
+        :total="docTotal" v-model:current-page="docQuery.page" :page-size="docQuery.size" @current-change="loadDocs" />
+    </el-card>
+
+    <kb-form-dialog v-model="editing" :kb="kb" @saved="(v) => (kb = v)" />
+  </div>`,
+  setup() {
+    const route = VueRouter.useRoute()
+    const router = VueRouter.useRouter()
+    const kbId = route.params.kbId
+    const docBase = `/kb/${kbId}/docs`
+    const kb = ref(null)
+    const loading = ref(false)
+    const editing = ref(false)
+    const isNarrow = window.innerWidth < 768
+
+    const docs = ref([])
+    const docTotal = ref(0)
+    const docLoading = ref(false)
+    const docQuery = reactive({ page: 1, size: 20, keyword: '' })
+
+    const load = async () => {
+      loading.value = true
+      try {
+        kb.value = await api.getKb(kbId)
+      } catch {
+        kb.value = null
+        return
+      } finally {
+        loading.value = false
+      }
+      loadDocs()
+    }
+    const loadDocs = async () => {
+      docLoading.value = true
+      try {
+        const params = { page: docQuery.page, size: docQuery.size, keyword: docQuery.keyword || undefined }
+        const data = await api.listDocs(kbId, params)
+        if (!data.items.length && docQuery.page > 1) {
+          docQuery.page -= 1
+          return loadDocs()
+        }
+        docs.value = data.items
+        docTotal.value = data.total
+      } finally {
+        docLoading.value = false
+      }
+    }
+    const searchDocs = () => { docQuery.page = 1; loadDocs() }
+
+    const remove = async () => {
+      if (await confirmDeleteKb(kb.value)) router.replace('/kb')
+    }
+    const removeDoc = async (doc) => {
+      if (await confirmDeleteDoc(kbId, doc)) loadDocs()
+    }
+
+    onMounted(load)
+    return {
+      kb, loading, editing, isNarrow, docBase, docs, docTotal, docLoading, docQuery,
+      loadDocs, searchDocs, remove, removeDoc, formatTime,
+    }
   },
 }

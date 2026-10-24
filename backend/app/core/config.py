@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     UPLOAD_DIR: Path = BACKEND_DIR / "uploads"
     FRONTEND_DIR: Path = PROJECT_DIR / "frontend"
     AVATAR_MAX_BYTES: int = 2 * 1024 * 1024
+    DOC_IMAGE_MAX_BYTES: int = 10 * 1024 * 1024
 
     @property
     def admin_usernames(self) -> set[str]:

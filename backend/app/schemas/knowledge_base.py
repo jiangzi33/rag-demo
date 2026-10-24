@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.schemas.user import UserBriefOut
+
 
 def _strip_name(v: str) -> str:
     v = v.strip()
@@ -36,5 +38,6 @@ class KnowledgeBaseOut(BaseModel):
     id: int
     name: str
     owner_id: int
+    owner: UserBriefOut | None = None  # 管理员信息，用户被物理删除时为 None
     created_at: datetime
     updated_at: datetime

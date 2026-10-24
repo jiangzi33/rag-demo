@@ -49,6 +49,7 @@ def test_knowledge_base_flow(client, monkeypatch):
     assert r.status_code == 200, r.text
     kb = r.json()["data"]
     assert kb["name"] == "产品文档" and kb["owner_id"] == uid1
+    assert kb["owner"]["username"] == "kbowner" and "password" not in kb["owner"]
     assert kb["created_at"] and kb["updated_at"]
 
     # 同一管理员下重名不允许，不同管理员可以重名
@@ -75,7 +76,7 @@ def test_knowledge_base_flow(client, monkeypatch):
     # 转让管理员：目标不存在 404；转让后原管理员失去权限
     assert client.patch(f"{url}/owner", headers=h1, json={"owner_id": 99999}).status_code == 404
     r = client.patch(f"{url}/owner", headers=h1, json={"owner_id": uid2}).json()["data"]
-    assert r["owner_id"] == uid2
+    assert r["owner_id"] == uid2 and r["owner"]["username"] == "kbother"
     assert client.get(url, headers=h1).status_code == 404
     assert client.get(url, headers=h2).status_code == 200
 

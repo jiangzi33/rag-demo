@@ -5,10 +5,24 @@ from sqlalchemy.exc import IntegrityError
 
 from app.core.config import settings
 from app.core.exceptions import BizError, ErrorCode
+from app.mapper import document_mapper
 from app.mapper import knowledge_base_mapper as kb_mapper
 from app.mapper import user_mapper
 from app.models.knowledge_base import KnowledgeBase
 from app.models.user import User, UserStatus
+from app.schemas.knowledge_base import KnowledgeBaseOut
+from app.schemas.user import UserBriefOut
+
+
+def to_out(conn: Connection, kbs: list[KnowledgeBase]) -> list[KnowledgeBaseOut]:
+    """组装响应：一次批量查询补齐管理员信息，避免 N+1。"""
+    owners = {u.id: u for u in user_mapper.select_by_ids(conn, list({kb.owner_id for kb in kbs}))}
+    return [
+        KnowledgeBaseOut.model_validate(kb).model_copy(
+            update={"owner": UserBriefOut.model_validate(owners[kb.owner_id]) if kb.owner_id in owners else None}
+        )
+        for kb in kbs
+    ]
 
 
 def _is_manager(user: User, kb: KnowledgeBase) -> bool:
@@ -83,5 +97,11 @@ def transfer_owner(conn: Connection, user: User, kb_id: int, owner_id: int) -> K
 
 def delete(conn: Connection, user: User, kb_id: int) -> None:
     kb = get_managed_or_404(conn, user, kb_id)
+    # 同一事务内先删文档再删知识库，避免留下孤儿文档
+    document_mapper.delete_by_kb_id(conn, kb.id)
     kb_mapper.delete_by_id(conn, kb.id)
     conn.commit()
+    # 数据库提交成功后再删除该知识库的正文图片
+    from app.services.document_service import remove_kb_images  # 避免循环导入
+
+    remove_kb_images(kb.id)

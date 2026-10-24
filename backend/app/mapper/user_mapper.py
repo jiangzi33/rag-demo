@@ -48,6 +48,16 @@ def select_by_email(conn: Connection, email: str) -> User | None:
     return _row_to_user(conn.execute(text(sql), {"email": email}).mappings().first())
 
 
+def select_by_ids(conn: Connection, ids: list[int]) -> list[User]:
+    """相当于 <foreach collection="ids" open="(" separator="," close=")">；每个 id 都是独立的绑定参数。"""
+    if not ids:
+        return []
+    params = {f"id{i}": v for i, v in enumerate(ids)}
+    placeholders = ", ".join(f":{k}" for k in params)
+    sql = f"SELECT {BASE_COLUMN_LIST} FROM users WHERE id IN ({placeholders})"
+    return [User(**row) for row in conn.execute(text(sql), params).mappings().all()]
+
+
 def _build_where(keyword: str | None, status: int | None, is_vip: bool | None) -> tuple[str, dict]:
     """
     等价于：

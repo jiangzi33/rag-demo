@@ -83,6 +83,12 @@ def update_owner(conn: Connection, id: int, owner_id: int) -> int:
     return conn.execute(text(sql), {"owner_id": owner_id, "id": id}).rowcount
 
 
+def touch(conn: Connection, id: int) -> int:
+    """知识库内的文档有增删改时刷新知识库的更新时间。"""
+    sql = "UPDATE knowledge_bases SET updated_at = CURRENT_TIMESTAMP WHERE id = :id"
+    return conn.execute(text(sql), {"id": id}).rowcount
+
+
 # ==================== 删除 delete ====================
 
 def delete_by_id(conn: Connection, id: int) -> int:

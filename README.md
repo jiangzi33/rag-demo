@@ -23,10 +23,13 @@ backend/
     api/users.py          # 个人资料、改密、头像
     api/admin.py          # 管理员：用户列表、状态、VIP
     api/knowledge_bases.py    # 知识库增删改查、转让管理员（models/mapper/schemas/services 下有同名模块）
+    api/documents.py          # 文档增删改查（同上）
   tests/test_users.py     # 接口全流程测试（SQLite）
   tests/test_knowledge_bases.py
+  tests/test_documents.py
 frontend/
-  index.html  js/api.js  js/pages.js  js/app.js  css/style.css
+  index.html  js/api.js  js/pages.js  js/docs.js  js/app.js  css/style.css
+  # 文档页面在 js/docs.js，路由全部嵌在 /kb/:kbId/docs 下，没有独立的文档入口
 ```
 
 ## 快速开始
@@ -77,6 +80,21 @@ cd backend && ../.venv/bin/uvicorn app.main:app --reload --port 8000
 
 权限：知识库管理员或系统管理员（`ADMIN_USERNAMES`）可查看 / 改名 / 转让 / 删除；无权限时统一返回 404，不暴露他人知识库是否存在。
 
+## 文档表 `documents`
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| id | BIGINT UNSIGNED PK AUTO_INCREMENT | 主键 |
+| kb_id | BIGINT UNSIGNED | 所在知识库，关联 `knowledge_bases.id` |
+| title | VARCHAR(128) | 文档标题，1-128 字符 |
+| content | MEDIUMTEXT | 文档正文（最大 16MB，接口限制 100 万字符） |
+| author_id | BIGINT UNSIGNED | 文档作者（创建者），关联 `users.id`，编辑不改变作者 |
+| published_at | DATETIME | 发布日期，数据库默认 `CURRENT_TIMESTAMP` |
+| updated_at | DATETIME | 最近编辑日期，仅在标题或正文变化时刷新 |
+
+索引：`idx_kb_updated (kb_id, updated_at)` 支撑“知识库内按最近编辑排序”的列表；`idx_author_id` 留给“我写的文档”。
+权限沿用知识库：能管理知识库的人才能读写其中的文档。文档增删改会同步刷新知识库的 `updated_at`；删除知识库时同一事务内删除其下所有文档。
+
 ## 数据访问层（MyBatis 风格）
 
 不使用 ORM，所有 SQL 集中写在 `app/mapper/user_mapper.py`，分层与 Spring Boot + MyBatis 一致：
@@ -118,7 +136,12 @@ Mapper 方法：`select_by_id`、`select_by_username`、`select_by_email`、`cou
 | GET | /api/knowledge-bases/{id} | 知识库详情 | 知识库管理员 |
 | PUT | /api/knowledge-bases/{id} | 修改名称 | 知识库管理员 |
 | PATCH | /api/knowledge-bases/{id}/owner | 转让管理员 | 知识库管理员 |
-| DELETE | /api/knowledge-bases/{id} | 删除知识库 | 知识库管理员 |
+| DELETE | /api/knowledge-bases/{id} | 删除知识库（连同其下文档） | 知识库管理员 |
+| POST | /api/knowledge-bases/{kb_id}/documents | 新建文档（当前用户为作者） | 知识库管理员 |
+| GET | /api/knowledge-bases/{kb_id}/documents | 文档列表，不含正文，支持标题 keyword | 知识库管理员 |
+| GET | /api/knowledge-bases/{kb_id}/documents/{id} | 文档详情（含正文） | 知识库管理员 |
+| PUT | /api/knowledge-bases/{kb_id}/documents/{id} | 编辑标题和正文 | 知识库管理员 |
+| DELETE | /api/knowledge-bases/{kb_id}/documents/{id} | 删除文档 | 知识库管理员 |
 
 ## 设计要点
 

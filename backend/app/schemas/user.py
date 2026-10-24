@@ -105,6 +105,16 @@ class UserOut(BaseModel):
         return self.username in settings.admin_usernames
 
 
+class UserBriefOut(BaseModel):
+    """关联展示用的用户简要信息（知识库管理员、文档作者等）"""
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    username: str
+    nickname: str
+    avatar: str | None
+
+
 class TokenOut(BaseModel):
     access_token: str
     token_type: str = "bearer"

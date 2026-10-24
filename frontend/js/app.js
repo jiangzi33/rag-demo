@@ -2,8 +2,9 @@ const Layout = {
   template: `
   <el-container class="layout">
     <el-header class="header">
-      <div class="brand" @click="$router.push('/profile')">📚 知识库</div>
-      <el-menu mode="horizontal" :ellipsis="false" router :default-active="$route.path" class="nav">
+      <div class="brand" @click="$router.push(HOME_PATH)">📚 知识库</div>
+      <el-menu mode="horizontal" :ellipsis="false" router :default-active="activeMenu" class="nav">
+        <el-menu-item index="/kb">知识库</el-menu-item>
         <el-menu-item index="/profile">个人中心</el-menu-item>
         <el-menu-item v-if="auth.user?.is_admin" index="/admin/users">用户管理</el-menu-item>
       </el-menu>
@@ -25,6 +26,9 @@ const Layout = {
   </el-container>`,
   setup() {
     const router = VueRouter.useRouter()
+    const route = VueRouter.useRoute()
+    // 详情页 /kb/1 也高亮“知识库”菜单
+    const activeMenu = computed(() => (route.path.startsWith('/kb') ? '/kb' : route.path))
     const onCommand = (cmd) => {
       if (cmd === 'logout') {
         auth.logout()
@@ -33,7 +37,7 @@ const Layout = {
         router.push('/profile')
       }
     }
-    return { auth, onCommand }
+    return { auth, activeMenu, onCommand, HOME_PATH }
   },
 }
 
@@ -45,13 +49,19 @@ const router = VueRouter.createRouter({
     {
       path: '/',
       component: Layout,
-      redirect: '/profile',
+      redirect: HOME_PATH,
       children: [
+        { path: 'kb', component: KbListPage, meta: { auth: true } },
+        { path: 'kb/:kbId(\\d+)', component: KbDetailPage, meta: { auth: true } },
+        // 文档路由全部嵌在知识库路径下，没有独立的 /docs 入口
+        { path: 'kb/:kbId(\\d+)/docs/new', component: DocEditPage, meta: { auth: true } },
+        { path: 'kb/:kbId(\\d+)/docs/:docId(\\d+)', component: DocViewPage, meta: { auth: true } },
+        { path: 'kb/:kbId(\\d+)/docs/:docId(\\d+)/edit', component: DocEditPage, meta: { auth: true } },
         { path: 'profile', component: ProfilePage, meta: { auth: true } },
         { path: 'admin/users', component: AdminUsersPage, meta: { auth: true, admin: true } },
       ],
     },
-    { path: '/:pathMatch(.*)*', redirect: '/profile' },
+    { path: '/:pathMatch(.*)*', redirect: HOME_PATH },
   ],
 })
 
@@ -65,10 +75,10 @@ router.beforeEach(async (to) => {
     }
   }
   if (to.meta.auth && !auth.user) return { path: '/login', query: { redirect: to.fullPath } }
-  if (to.meta.guest && auth.user) return '/profile'
+  if (to.meta.guest && auth.user) return HOME_PATH
   if (to.meta.admin && !auth.user.is_admin) {
     ElementPlus.ElMessage.warning('无管理员权限')
-    return '/profile'
+    return HOME_PATH
   }
 })
 

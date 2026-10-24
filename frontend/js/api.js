@@ -51,6 +51,22 @@ const api = {
   adminListUsers: (params) => http.get('/admin/users', { params }),
   adminSetStatus: (id, status) => http.patch(`/admin/users/${id}/status`, { status }),
   adminSetVip: (id, is_vip) => http.patch(`/admin/users/${id}/vip`, { is_vip }),
+  listKbs: (params) => http.get('/knowledge-bases', { params }),
+  getKb: (id) => http.get(`/knowledge-bases/${id}`),
+  createKb: (data) => http.post('/knowledge-bases', data),
+  updateKb: (id, data) => http.put(`/knowledge-bases/${id}`, data),
+  deleteKb: (id) => http.delete(`/knowledge-bases/${id}`),
+  // 文档必须属于某个知识库，所有文档接口都带 kbId
+  listDocs: (kbId, params) => http.get(`/knowledge-bases/${kbId}/documents`, { params }),
+  getDoc: (kbId, id) => http.get(`/knowledge-bases/${kbId}/documents/${id}`),
+  createDoc: (kbId, data) => http.post(`/knowledge-bases/${kbId}/documents`, data),
+  updateDoc: (kbId, id, data) => http.put(`/knowledge-bases/${kbId}/documents/${id}`, data),
+  deleteDoc: (kbId, id) => http.delete(`/knowledge-bases/${kbId}/documents/${id}`),
+  uploadDocImage: (kbId, file) => {
+    const form = new FormData()
+    form.append('file', file)
+    return http.post(`/knowledge-bases/${kbId}/documents/images`, form, { timeout: 60000 })
+  },
 }
 
 // 与后端 UserStatus 保持一致
@@ -71,6 +87,14 @@ const rules = {
   email: [
     { required: true, message: '请输入邮箱', trigger: 'blur' },
     { type: 'email', message: '邮箱格式不正确', trigger: 'blur' },
+  ],
+  kbName: [
+    { required: true, whitespace: true, message: '请输入知识库名称', trigger: 'blur' },
+    { max: 64, message: '名称最多 64 个字符', trigger: 'blur' },
+  ],
+  docTitle: [
+    { required: true, whitespace: true, message: '请输入文档标题', trigger: 'blur' },
+    { max: 128, message: '标题最多 128 个字符', trigger: 'blur' },
   ],
   nickname: [{ max: 32, message: '昵称最多 32 个字符', trigger: 'blur' }],
   password: [

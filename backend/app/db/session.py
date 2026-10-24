@@ -30,7 +30,7 @@ def init_db() -> None:
             for stmt in filter(str.strip, script.split(";")):
                 conn.exec_driver_sql(stmt)
             conn.commit()
-        for table in ("users", "knowledge_bases"):
+        for table in ("users", "knowledge_bases", "documents"):
             try:
                 conn.execute(text(f"SELECT 1 FROM {table} LIMIT 1"))
             except Exception as e:

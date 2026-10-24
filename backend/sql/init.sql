@@ -37,3 +37,19 @@ CREATE TABLE IF NOT EXISTS knowledge_bases
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci COMMENT ='知识库表';
+
+CREATE TABLE IF NOT EXISTS documents
+(
+    id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    kb_id        BIGINT UNSIGNED NOT NULL COMMENT '所在知识库，关联 knowledge_bases.id',
+    title        VARCHAR(128)    NOT NULL COMMENT '文档标题',
+    content      MEDIUMTEXT      NOT NULL COMMENT '文档正文（最大 16MB）',
+    author_id    BIGINT UNSIGNED NOT NULL COMMENT '文档作者（创建者），关联 users.id',
+    published_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '发布日期',
+    updated_at   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '最近编辑日期（由 UPDATE 语句显式维护）',
+    PRIMARY KEY (id),
+    KEY idx_kb_updated (kb_id, updated_at),
+    KEY idx_author_id (author_id)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci COMMENT ='文档表';

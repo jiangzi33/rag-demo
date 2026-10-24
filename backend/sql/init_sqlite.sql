@@ -25,3 +25,17 @@ CREATE TABLE IF NOT EXISTS knowledge_bases
 );
 
 CREATE INDEX IF NOT EXISTS idx_kb_updated_at ON knowledge_bases (updated_at);
+
+CREATE TABLE IF NOT EXISTS documents
+(
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    kb_id        INTEGER      NOT NULL,
+    title        VARCHAR(128) NOT NULL,
+    content      TEXT         NOT NULL,
+    author_id    INTEGER      NOT NULL,
+    published_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_doc_kb_updated ON documents (kb_id, updated_at);
+CREATE INDEX IF NOT EXISTS idx_doc_author_id ON documents (author_id);

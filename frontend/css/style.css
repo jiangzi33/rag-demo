@@ -33,3 +33,64 @@ a { color: #00b96b; text-decoration: none; }
 /* 用户管理 */
 .user-cell { display: flex; align-items: center; gap: 10px; }
 .pager { margin-top: 16px; justify-content: flex-end; }
+
+/* 知识库 */
+.page-title { margin: 0; font-size: 18px; font-weight: 600; }
+.kb-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.kb-toolbar .page-title { margin-right: auto; }
+.kb-search { width: 240px; }
+.kb-body { min-height: 200px; }
+.kb-card { margin-bottom: 16px; cursor: pointer; border-radius: 10px; }
+.kb-card-head { display: flex; align-items: center; gap: 12px; }
+.kb-icon { flex: none; width: 40px; height: 40px; border-radius: 8px; background: #e8f7f0; color: #00b96b;
+  display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; }
+.kb-name { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kb-more { font-size: 18px; letter-spacing: 1px; }
+.kb-meta { margin-top: 14px; }
+.kb-header { margin-bottom: 16px; }
+.danger-item { color: var(--el-color-danger) !important; }
+@media (max-width: 600px) { .kb-search { width: 100%; order: 3; } }
+
+/* 知识库详情 */
+.kb-info { margin-bottom: 16px; }
+.section-title { margin: 0 auto 0 0; font-size: 16px; font-weight: 600; }
+.clickable-row { cursor: pointer; }
+.doc-title-cell { font-weight: 500; }
+
+/* 文档 */
+.doc-page { max-width: 1100px; }
+.doc-breadcrumb { margin-bottom: 16px; }
+.doc-head { display: flex; align-items: flex-start; gap: 16px; }
+.doc-title { flex: 1; min-width: 0; margin: 0; font-size: 26px; line-height: 1.35; word-break: break-word; }
+.doc-actions { flex: none; }
+.doc-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 10px; font-size: 13px; }
+.doc-edit-card .el-card__body { padding-top: 12px; }
+.editor-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding-bottom: 12px; }
+.editor-title-form { flex: 1; min-width: 240px; }
+.editor-title-form .el-form-item { margin-bottom: 0; }
+.doc-title-input .el-input__wrapper { box-shadow: none !important; padding: 0; }
+.doc-title-input .el-input__inner { font-size: 22px; font-weight: 600; height: 40px; }
+.rich-editor { border: 1px solid #e4e7e6; border-radius: 6px; overflow: hidden; }
+.rich-toolbar { border-bottom: 1px solid #e4e7e6; }
+.rich-body { height: calc(100vh - 290px); min-height: 380px; overflow-y: hidden; }
+@media (max-width: 767px) {
+  .hide-narrow { display: none; }
+  .doc-head { flex-direction: column; }
+}
+
+/* 富文本正文：阅读页与编辑区的图片都按容器宽度自适应、等比缩放 */
+.doc-content img, .rich-body img { max-width: 100% !important; height: auto !important; }
+.doc-content { font-size: 15px; line-height: 1.8; word-break: break-word; overflow-x: auto; }
+.doc-content > :first-child { margin-top: 0; }
+.doc-content p { margin: 0 0 .8em; }
+.doc-content h1, .doc-content h2, .doc-content h3, .doc-content h4, .doc-content h5 { margin: 1.2em 0 .6em; line-height: 1.4; }
+.doc-content code { padding: 2px 5px; border-radius: 4px; background: #f2f3f5; font-family: ui-monospace, Menlo, monospace; font-size: .9em; }
+.doc-content pre { padding: 12px 16px; border-radius: 6px; background: #f6f8fa; overflow: auto; }
+.doc-content pre code { padding: 0; background: none; }
+.doc-content blockquote { margin: 0 0 .8em; padding: 6px 12px; color: #6b716f; background: #f6f8fa; border-left: 4px solid #d0d5d3; }
+.doc-content table { border-collapse: collapse; max-width: 100%; }
+.doc-content th, .doc-content td { padding: 6px 12px; border: 1px solid #dfe2e1; }
+.doc-content th { background: #f6f8fa; }
+.doc-content hr { border: none; border-top: 1px solid #e4e7e6; margin: 1.2em 0; }
+.doc-content div[data-w-e-type="todo"] { margin: 0 0 .4em; }
+.doc-content div[data-w-e-type="todo"] input { margin-right: 6px; }
