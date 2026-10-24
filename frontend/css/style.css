@@ -1,0 +1,35 @@
+* { box-sizing: border-box; }
+body { margin: 0; background: #f5f6f7; color: #262626;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
+a { color: #00b96b; text-decoration: none; }
+.full { width: 100%; }
+.muted { color: #8a8f8d; font-size: 12px; }
+
+/* 登录 / 注册 */
+.auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px;
+  background: linear-gradient(135deg, #e8f7f0 0%, #f5f6f7 60%); }
+.auth-card { width: 100%; max-width: 400px; border-radius: 12px; }
+.auth-title { text-align: center; margin: 4px 0 24px; font-weight: 600; }
+.auth-foot { text-align: center; margin-top: 16px; font-size: 14px; color: #8a8f8d; }
+
+/* 布局 */
+.layout { min-height: 100vh; }
+.header { display: flex; align-items: center; gap: 24px; background: #fff; border-bottom: 1px solid #e7e9e8; }
+.brand { font-size: 18px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.nav { flex: 1; border-bottom: none !important; height: 59px; }
+.user-entry { display: flex; align-items: center; gap: 8px; cursor: pointer; outline: none; }
+.page { max-width: 1200px; margin: 0 auto; }
+
+/* 个人中心 */
+.profile-card { text-align: center; margin-bottom: 20px; }
+.profile-card h3 { margin: 12px 0 16px; }
+.avatar-uploader { position: relative; display: inline-block; border-radius: 50%; overflow: hidden; }
+.avatar-uploader .el-upload { position: relative; }
+.avatar-mask { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, .45); color: #fff; font-size: 13px; opacity: 0; transition: opacity .2s; border-radius: 50%; }
+.avatar-uploader:hover .avatar-mask { opacity: 1; }
+.narrow-form { max-width: 460px; padding-top: 8px; }
+
+/* 用户管理 */
+.user-cell { display: flex; align-items: center; gap: 10px; }
+.pager { margin-top: 16px; justify-content: flex-end; }
