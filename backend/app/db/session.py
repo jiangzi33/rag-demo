@@ -30,9 +30,32 @@ def init_db() -> None:
             for stmt in filter(str.strip, script.split(";")):
                 conn.exec_driver_sql(stmt)
             conn.commit()
-        for table in ("users", "knowledge_bases", "documents"):
+        for table in ("users", "knowledge_bases", "documents", "permissions"):
             try:
                 conn.execute(text(f"SELECT 1 FROM {table} LIMIT 1"))
             except Exception as e:
                 conn.rollback()
                 raise RuntimeError(f"{table} 表不存在，请先执行: mysql -uroot -p < sql/init.sql") from e
+        if not is_sqlite:
+            _upgrade_permission_unique_key(conn)
+            _create_notifications_table(conn)
+
+
+def _upgrade_permission_unique_key(conn: Connection) -> None:
+    """旧库升级（同 sql/migrate_permission_upgrade.sql）：唯一键放宽为每种状态一条，
+    使已生效的权限与追加申请的更高权限可以并存。现有数据满足新约束，无需改动。"""
+    old = conn.execute(text("SHOW INDEX FROM permissions WHERE Key_name = 'uk_user_target'")).first()
+    if old:
+        conn.execute(text(
+            "ALTER TABLE permissions DROP INDEX uk_user_target, "
+            "ADD UNIQUE KEY uk_user_target_status (user_id, target_type, target_id, status)"
+        ))
+        conn.commit()
+
+
+def _create_notifications_table(conn: Connection) -> None:
+    """旧库升级：执行 sql/init.sql 中 notifications 表的建表语句（CREATE TABLE IF NOT EXISTS，已存在时跳过）。"""
+    script = (BACKEND_DIR / "sql" / "init.sql").read_text(encoding="utf-8")
+    stmt = next(s for s in script.split(";") if "CREATE TABLE IF NOT EXISTS notifications" in s)
+    conn.exec_driver_sql(stmt)
+    conn.commit()

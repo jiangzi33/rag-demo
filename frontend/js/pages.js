@@ -387,18 +387,23 @@ const confirmDeleteKb = async (kb) => {
 
 // ---------------- 知识库主页 ----------------
 const KbListPage = {
-  components: { KbFormDialog },
+  components: { KbFormDialog, PermTag, PendingTag },
   template: `
   <div class="page">
     <div class="kb-toolbar">
-      <h2 class="page-title">我的知识库</h2>
+      <h2 class="page-title">知识库</h2>
+      <el-radio-group v-model="query.scope" @change="search">
+        <el-radio-button value="all">全部</el-radio-button>
+        <el-radio-button value="mine">我有权限的</el-radio-button>
+      </el-radio-group>
       <el-input v-model="query.keyword" placeholder="搜索知识库名称" clearable class="kb-search"
                 @keyup.enter="search" @clear="search" />
       <el-button type="primary" @click="openCreate">+ 新建知识库</el-button>
     </div>
 
     <div v-loading="loading" class="kb-body">
-      <el-empty v-if="!loading && !list.length" :description="query.keyword ? '没有匹配的知识库' : '还没有知识库'">
+      <el-empty v-if="!loading && !list.length"
+                :description="query.keyword ? '没有匹配的知识库' : query.scope === 'mine' ? '还没有你有权限的知识库' : '还没有知识库'">
         <el-button v-if="!query.keyword" type="primary" @click="openCreate">创建第一个知识库</el-button>
       </el-empty>
       <el-row v-else :gutter="16">
@@ -413,15 +418,17 @@ const KbListPage = {
                 <template #dropdown>
                   <el-dropdown-menu>
                     <el-dropdown-item command="detail">查看详情</el-dropdown-item>
-                    <el-dropdown-item command="edit">编辑</el-dropdown-item>
-                    <el-dropdown-item command="delete" divided class="danger-item">删除</el-dropdown-item>
+                    <el-dropdown-item v-if="hasPerm(kb.my_permission, 'manage')" command="edit">编辑</el-dropdown-item>
+                    <el-dropdown-item v-if="hasPerm(kb.my_permission, 'owner')" command="delete" divided class="danger-item">删除</el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
               </span>
             </div>
             <div class="muted kb-meta">
-              管理员：{{ kb.owner?.nickname || '-' }} · 更新于 {{ formatTime(kb.updated_at) }}
+              <perm-tag :perm="kb.my_permission" partial="未授权" />
+              <pending-tag :perm="kb.pending_permission" />
+              <span>{{ kb.my_permission === 'owner' ? '' : '管理员：' + (kb.owner?.nickname || '-') + ' · ' }}更新于 {{ formatTime(kb.updated_at) }}</span>
             </div>
           </el-card>
         </el-col>
@@ -438,13 +445,13 @@ const KbListPage = {
     const loading = ref(false)
     const list = ref([])
     const total = ref(0)
-    const query = reactive({ page: 1, size: 12, keyword: '' })
+    const query = reactive({ page: 1, size: 12, keyword: '', scope: 'all' })
     const dialog = reactive({ visible: false, kb: null })
 
     const load = async () => {
       loading.value = true
       try {
-        const params = { page: query.page, size: query.size, keyword: query.keyword || undefined }
+        const params = { page: query.page, size: query.size, keyword: query.keyword || undefined, scope: query.scope }
         const data = await api.listKbs(params)
         // 删除最后一页的最后一条后回退一页
         if (!data.items.length && query.page > 1) {
@@ -467,21 +474,26 @@ const KbListPage = {
     }
 
     onMounted(load)
-    return { loading, list, total, query, dialog, load, search, openCreate, onCommand, formatTime }
+    return { loading, list, total, query, dialog, load, search, openCreate, onCommand, formatTime, hasPerm }
   },
 }
 
 // ---------------- 知识库详情（含文档列表） ----------------
 // 文档只能在知识库内创建和浏览，没有独立的文档入口
 const KbDetailPage = {
-  components: { KbFormDialog },
+  components: { KbFormDialog, PermTag, PendingTag, PermissionDrawer, ApplyPermissionDialog, NoAccess },
   template: `
   <div class="page">
     <el-page-header @back="$router.push('/kb')" class="kb-header">
       <template #content><span class="page-title">{{ kb?.name || '知识库详情' }}</span></template>
       <template #extra v-if="kb">
-        <el-button @click="editing = true">编辑知识库</el-button>
-        <el-button type="danger" plain @click="remove">删除知识库</el-button>
+        <div class="header-actions">
+          <el-button v-if="can('manage')" @click="openMembers('kb', kb.id, kb.name)">成员与权限</el-button>
+          <el-button v-else-if="kb.pending_permission" disabled>{{ PERMISSION_TYPE_LABEL[kb.pending_permission] }}权限审批中</el-button>
+          <el-button v-else @click="applying = true">申请{{ kb.my_permission ? '更高' : '' }}权限</el-button>
+          <el-button v-if="can('manage')" @click="editing = true">编辑知识库</el-button>
+          <el-button v-if="can('owner')" type="danger" plain @click="remove">删除知识库</el-button>
+        </div>
       </template>
     </el-page-header>
 
@@ -494,13 +506,17 @@ const KbDetailPage = {
           </div>
           <span v-else class="muted">用户已删除</span>
         </el-descriptions-item>
-        <el-descriptions-item label="知识库ID">{{ kb.id }}</el-descriptions-item>
+        <el-descriptions-item label="我的权限">
+          <perm-tag :perm="kb.my_permission" partial="未授权" />
+          <pending-tag :perm="kb.pending_permission" style="margin-left: 6px" />
+        </el-descriptions-item>
         <el-descriptions-item label="创建时间">{{ formatTime(kb.created_at) }}</el-descriptions-item>
         <el-descriptions-item label="更新时间">{{ formatTime(kb.updated_at) }}</el-descriptions-item>
       </el-descriptions>
-      <el-empty v-else-if="!loading" description="知识库不存在或无权访问">
-        <el-button type="primary" @click="$router.push('/kb')">返回知识库列表</el-button>
-      </el-empty>
+      <no-access v-else-if="!loading" target-type="kb" :target-id="kbId" />
+      <p v-if="kb && !can('write')" class="muted perm-hint kb-perm-hint">
+        所有文档对你可见：有读权限才能打开，有写权限才能编辑，有管理权限才能删除。可以对整个知识库申请权限，也可以在下方针对单篇文档申请。
+      </p>
     </el-card>
 
     <el-card v-if="kb" shadow="never">
@@ -508,16 +524,19 @@ const KbDetailPage = {
         <h3 class="section-title">文档 <span class="muted">{{ docTotal }}</span></h3>
         <el-input v-model="docQuery.keyword" placeholder="搜索文档标题" clearable class="kb-search"
                   @keyup.enter="searchDocs" @clear="searchDocs" />
-        <el-button type="primary" @click="$router.push(docBase + '/new')">+ 新建文档</el-button>
+        <el-button v-if="can('write')" type="primary" @click="$router.push(docBase + '/new')">+ 新建文档</el-button>
       </div>
 
       <el-empty v-if="!docLoading && !docs.length" :description="docQuery.keyword ? '没有匹配的文档' : '这个知识库还没有文档'">
-        <el-button v-if="!docQuery.keyword" type="primary" @click="$router.push(docBase + '/new')">写第一篇文档</el-button>
+        <el-button v-if="!docQuery.keyword && can('write')" type="primary" @click="$router.push(docBase + '/new')">写第一篇文档</el-button>
       </el-empty>
-      <el-table v-else :data="docs" v-loading="docLoading" @row-click="(row) => $router.push(docBase + '/' + row.id)"
-                row-class-name="clickable-row">
+      <el-table v-else :data="docs" v-loading="docLoading" @row-click="openDoc" row-class-name="clickable-row">
         <el-table-column label="标题" min-width="220">
-          <template #default="{ row }"><span class="doc-title-cell">{{ row.title }}</span></template>
+          <template #default="{ row }">
+            <span class="doc-title-cell" :class="{ locked: !hasPerm(row.my_permission, 'read') }">
+              <span v-if="!hasPerm(row.my_permission, 'read')" class="lock-icon" title="没有读权限">🔒</span>{{ row.title }}
+            </span>
+          </template>
         </el-table-column>
         <el-table-column label="作者" width="140">
           <template #default="{ row }">{{ row.author?.nickname || '-' }}</template>
@@ -528,12 +547,26 @@ const KbDetailPage = {
         <el-table-column label="发布日期" width="170">
           <template #default="{ row }">{{ formatTime(row.published_at) }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="150" fixed="right">
+        <el-table-column label="我的权限" width="130">
+          <template #default="{ row }">
+            <div class="perm-cell">
+              <perm-tag :perm="row.my_permission" partial="无权限" />
+              <pending-tag :perm="row.pending_permission" />
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="220" fixed="right">
           <template #default="{ row }">
             <span @click.stop>
-              <el-button link type="primary" @click="$router.push(docBase + '/' + row.id)">查看</el-button>
-              <el-button link type="primary" @click="$router.push(docBase + '/' + row.id + '/edit')">编辑</el-button>
-              <el-button link type="danger" @click="removeDoc(row)">删除</el-button>
+              <el-button v-if="hasPerm(row.my_permission, 'read')" link type="primary"
+                         @click="$router.push(docBase + '/' + row.id)">查看</el-button>
+              <el-button v-if="hasPerm(row.my_permission, 'write')" link type="primary"
+                         @click="$router.push(docBase + '/' + row.id + '/edit')">编辑</el-button>
+              <el-button v-if="hasPerm(row.my_permission, 'manage')" link type="primary"
+                         @click="openMembers('doc', row.id, row.title)">权限</el-button>
+              <el-button v-if="canDeleteDoc(row)" link type="danger" @click="removeDoc(row)">删除</el-button>
+              <el-button v-if="!hasPerm(row.my_permission, 'manage') && !row.pending_permission" link type="warning"
+                         @click="openApply(row)">申请{{ row.my_permission ? '更高' : '' }}权限</el-button>
             </span>
           </template>
         </el-table-column>
@@ -544,6 +577,12 @@ const KbDetailPage = {
     </el-card>
 
     <kb-form-dialog v-model="editing" :kb="kb" @saved="(v) => (kb = v)" />
+    <permission-drawer v-model="members.visible" :target-type="members.targetType" :target-id="members.targetId"
+                       :target-name="members.targetName" />
+    <apply-permission-dialog v-if="kb" v-model="applying" target-type="kb" :target-id="kb.id" :target-name="kb.name"
+                             :current="kb.my_permission" @applied="load" />
+    <apply-permission-dialog v-model="docApply.visible" target-type="doc" :target-id="docApply.targetId"
+                             :target-name="docApply.targetName" :current="docApply.current" @applied="loadDocs" />
   </div>`,
   setup() {
     const route = VueRouter.useRoute()
@@ -596,10 +635,27 @@ const KbDetailPage = {
       if (await confirmDeleteDoc(kbId, doc)) loadDocs()
     }
 
+    // 权限：按 my_permission 显示操作按钮（后端同样会校验）
+    const can = (need) => hasPerm(kb.value?.my_permission, need)
+    const applying = ref(false)
+    const members = reactive({ visible: false, targetType: 'kb', targetId: 0, targetName: '' })
+    const openMembers = (targetType, targetId, targetName) =>
+      Object.assign(members, { visible: true, targetType, targetId, targetName })
+    // 针对单篇文档申请权限；没有读权限的文档点击时直接弹出申请
+    const docApply = reactive({ visible: false, targetId: 0, targetName: '', current: null })
+    const openApply = (doc) =>
+      Object.assign(docApply, { visible: true, targetId: doc.id, targetName: doc.title, current: doc.my_permission })
+    const openDoc = (doc) => {
+      if (hasPerm(doc.my_permission, 'read')) router.push(`${docBase}/${doc.id}`)
+      else if (doc.pending_permission) ElMessage.info('权限申请审批中，管理者同意后即可查看')
+      else openApply(doc)
+    }
+
     onMounted(load)
     return {
-      kb, loading, editing, isNarrow, docBase, docs, docTotal, docLoading, docQuery,
-      loadDocs, searchDocs, remove, removeDoc, formatTime,
+      kb, kbId, loading, editing, isNarrow, docBase, docs, docTotal, docLoading, docQuery, applying, members, docApply,
+      loadDocs, searchDocs, remove, removeDoc, can, openMembers, openApply, openDoc, hasPerm, canDeleteDoc, formatTime,
+      PERMISSION_TYPE_LABEL,
     }
   },
 }

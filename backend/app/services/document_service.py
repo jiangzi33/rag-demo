@@ -9,12 +9,14 @@ from app.core.config import settings
 from app.core.exceptions import BizError, ErrorCode
 from app.mapper import document_mapper
 from app.mapper import knowledge_base_mapper as kb_mapper
-from app.mapper import user_mapper
+from app.mapper import permission_mapper, user_mapper
 from app.models.document import Document
+from app.models.permission import TargetType
 from app.models.user import User
 from app.schemas.document import DocumentBriefOut, DocumentIn, DocumentOut
 from app.schemas.user import UserBriefOut
-from app.services import knowledge_base_service as kb_service
+from app.services import access_service as access
+from app.services.access_service import Level
 
 
 def _authors(conn: Connection, author_ids: set[int]) -> dict[int, UserBriefOut]:
@@ -22,52 +24,65 @@ def _authors(conn: Connection, author_ids: set[int]) -> dict[int, UserBriefOut]:
     return {u.id: UserBriefOut.model_validate(u) for u in user_mapper.select_by_ids(conn, list(author_ids))}
 
 
-def to_out(conn: Connection, doc: Document) -> DocumentOut:
+def _pending(conn: Connection, user: User, doc_ids: list[int]) -> dict[int, str]:
+    pending = permission_mapper.select_pending_application_types(conn, user.id, TargetType.DOC, doc_ids)
+    return {doc_id: t.value for doc_id, t in pending.items()}
+
+
+def to_out(conn: Connection, user: User, doc: Document, level: Level) -> DocumentOut:
     author = _authors(conn, {doc.author_id}).get(doc.author_id)
-    return DocumentOut(**asdict(doc), author=author)
+    pending = _pending(conn, user, [doc.id]).get(doc.id)
+    return DocumentOut(**asdict(doc), author=author, my_permission=level.label, pending_permission=pending)
 
 
-def get_or_404(conn: Connection, user: User, kb_id: int, doc_id: int) -> Document:
-    """先校验知识库权限，再校验文档确实属于该知识库。"""
-    kb_service.get_managed_or_404(conn, user, kb_id)
-    doc = document_mapper.select_by_id(conn, doc_id)
-    if not doc or doc.kb_id != kb_id:
-        raise BizError("文档不存在", ErrorCode.NOT_FOUND, 404)
-    return doc
+def get_readable(conn: Connection, user: User, kb_id: int, doc_id: int) -> tuple[Document, Level]:
+    return access.require_doc(conn, user, kb_id, doc_id, Level.READ)
 
 
 def list_by_kb(
     conn: Connection, user: User, kb_id: int, page: int, size: int, keyword: str | None
 ) -> tuple[list[DocumentBriefOut], int]:
-    kb_service.get_managed_or_404(conn, user, kb_id)
+    """所有人都能看到知识库中的全部文档（不含正文），my_permission 标明当前用户能否打开 / 编辑 / 管理。"""
+    _, kb_lvl = access.require_kb(conn, user, kb_id, Level.NONE)
     total = document_mapper.count_by_kb(conn, kb_id, keyword)
     if not total:
         return [], 0
     rows = document_mapper.select_page_by_kb(conn, kb_id, keyword, offset=(page - 1) * size, limit=size)
     authors = _authors(conn, {r["author_id"] for r in rows})
-    return [DocumentBriefOut(**r, author=authors.get(r["author_id"])) for r in rows], total
+    doc_ids = [r["id"] for r in rows]
+    levels = access.doc_levels(conn, user, doc_ids, kb_lvl)
+    pending = _pending(conn, user, doc_ids)
+    return [
+        DocumentBriefOut(
+            **r, author=authors.get(r["author_id"]), my_permission=levels[r["id"]].label, pending_permission=pending.get(r["id"])
+        )
+        for r in rows
+    ], total
 
 
-def create(conn: Connection, user: User, kb_id: int, data: DocumentIn) -> Document:
-    kb_service.get_managed_or_404(conn, user, kb_id)
+def create(conn: Connection, user: User, kb_id: int, data: DocumentIn) -> tuple[Document, Level]:
+    """在知识库中新建文档需要对知识库有写权限。"""
+    _, kb_lvl = access.require_kb(conn, user, kb_id, Level.WRITE)
     doc_id = document_mapper.insert(conn, kb_id=kb_id, title=data.title, content=data.content, author_id=user.id)
     kb_mapper.touch(conn, kb_id)
     conn.commit()
-    return document_mapper.select_by_id(conn, doc_id)
+    return document_mapper.select_by_id(conn, doc_id), kb_lvl
 
 
-def update(conn: Connection, user: User, kb_id: int, doc_id: int, data: DocumentIn) -> Document:
-    doc = get_or_404(conn, user, kb_id, doc_id)
+def update(conn: Connection, user: User, kb_id: int, doc_id: int, data: DocumentIn) -> tuple[Document, Level]:
+    doc, lvl = access.require_doc(conn, user, kb_id, doc_id, Level.WRITE)
     if data.title == doc.title and data.content == doc.content:
-        return doc  # 内容没变，不刷新最近编辑日期
+        return doc, lvl  # 内容没变，不刷新最近编辑日期
     document_mapper.update_content(conn, doc.id, data.title, data.content)
     kb_mapper.touch(conn, kb_id)
     conn.commit()
-    return document_mapper.select_by_id(conn, doc.id)
+    return document_mapper.select_by_id(conn, doc.id), lvl
 
 
 def delete(conn: Connection, user: User, kb_id: int, doc_id: int) -> None:
-    doc = get_or_404(conn, user, kb_id, doc_id)
+    """删除文档：需要文档（或所在知识库）的管理权限。"""
+    doc, _ = access.require_doc(conn, user, kb_id, doc_id, Level.MANAGE)
+    permission_mapper.delete_by_target(conn, TargetType.DOC, doc.id)
     document_mapper.delete_by_id(conn, doc.id)
     kb_mapper.touch(conn, kb_id)
     conn.commit()
@@ -97,7 +112,8 @@ def kb_image_dir(kb_id: int) -> Path:
 
 
 def save_image(conn: Connection, user: User, kb_id: int, content: bytes) -> str:
-    kb_service.get_managed_or_404(conn, user, kb_id)
+    if not access.can_write_in_kb(conn, user, kb_id):
+        raise BizError("没有权限上传图片", ErrorCode.FORBIDDEN, 403)
     if len(content) > settings.DOC_IMAGE_MAX_BYTES:
         raise BizError(f"图片不能超过 {settings.DOC_IMAGE_MAX_BYTES // 1024 // 1024}MB", ErrorCode.FILE_INVALID)
     ext = _image_ext(content)

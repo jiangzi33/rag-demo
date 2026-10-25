@@ -40,6 +40,8 @@ class DocumentBriefOut(BaseModel):
     title: str
     author_id: int
     author: UserBriefOut | None = None  # 作者被物理删除时为 None
+    my_permission: str | None = None  # 当前用户对文档的有效权限：owner / manage / write / read
+    pending_permission: str | None = None  # 当前用户对该文档待审批的申请：read / write / manage，审批期间 my_permission 不变
     published_at: datetime
     updated_at: datetime
 

@@ -24,6 +24,7 @@ def client():
         from app.db.session import engine
 
         with engine.connect() as conn:
+            conn.execute(text("DELETE FROM notifications"))
             conn.execute(text("DELETE FROM knowledge_bases"))
             conn.execute(text("DELETE FROM users WHERE email LIKE '%@kb.com'"))
             conn.commit()
@@ -60,13 +61,14 @@ def test_knowledge_base_flow(client, monkeypatch):
     client.post("/api/knowledge-bases", headers=h1, json={"name": "技术手册"})
     r = client.get("/api/knowledge-bases", headers=h1, params={"keyword": "手册"}).json()["data"]
     assert r["total"] == 1 and r["items"][0]["name"] == "技术手册"
-    assert client.get("/api/knowledge-bases", headers=h1).json()["data"]["total"] == 2
+    assert client.get("/api/knowledge-bases", headers=h1, params={"scope": "mine"}).json()["data"]["total"] == 2
+    assert client.get("/api/knowledge-bases", headers=h1).json()["data"]["total"] == 3  # 所有人可见
 
-    # 他人无权查看 / 修改 / 删除
+    # 他人能查看，但不能修改 / 删除
     url = f"/api/knowledge-bases/{kb['id']}"
-    assert client.get(url, headers=h2).status_code == 404
-    assert client.put(url, headers=h2, json={"name": "x"}).status_code == 404
-    assert client.delete(url, headers=h2).status_code == 404
+    assert client.get(url, headers=h2).json()["data"]["my_permission"] is None
+    assert client.put(url, headers=h2, json={"name": "x"}).status_code == 403
+    assert client.delete(url, headers=h2).status_code == 403
 
     # 改名
     r = client.put(url, headers=h1, json={"name": "产品文档V2"}).json()["data"]
@@ -77,8 +79,8 @@ def test_knowledge_base_flow(client, monkeypatch):
     assert client.patch(f"{url}/owner", headers=h1, json={"owner_id": 99999}).status_code == 404
     r = client.patch(f"{url}/owner", headers=h1, json={"owner_id": uid2}).json()["data"]
     assert r["owner_id"] == uid2 and r["owner"]["username"] == "kbother"
-    assert client.get(url, headers=h1).status_code == 404
-    assert client.get(url, headers=h2).status_code == 200
+    assert client.get(url, headers=h1).json()["data"]["my_permission"] is None
+    assert client.get(url, headers=h2).json()["data"]["my_permission"] == "owner"
 
     # 系统管理员可管理任意知识库
     monkeypatch.setattr(settings, "ADMIN_USERNAMES", "kbadmin")

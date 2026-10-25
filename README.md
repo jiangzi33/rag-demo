@@ -78,7 +78,7 @@ cd backend && ../.venv/bin/uvicorn app.main:app --reload --port 8000
 | created_at | DATETIME | 创建时间，数据库默认 `CURRENT_TIMESTAMP` |
 | updated_at | DATETIME | 更新时间，由 UPDATE 语句显式写 `CURRENT_TIMESTAMP`（兼容 SQLite） |
 
-权限：知识库管理员或系统管理员（`ADMIN_USERNAMES`）可查看 / 改名 / 转让 / 删除；无权限时统一返回 404，不暴露他人知识库是否存在。
+可见性：所有登录用户都能看到全部知识库；改名需要管理权限，转让 / 删除仅限拥有者或系统管理员（`ADMIN_USERNAMES`），详见下方权限表。
 
 ## 文档表 `documents`
 
@@ -87,13 +87,66 @@ cd backend && ../.venv/bin/uvicorn app.main:app --reload --port 8000
 | id | BIGINT UNSIGNED PK AUTO_INCREMENT | 主键 |
 | kb_id | BIGINT UNSIGNED | 所在知识库，关联 `knowledge_bases.id` |
 | title | VARCHAR(128) | 文档标题，1-128 字符 |
-| content | MEDIUMTEXT | 文档正文（最大 16MB，接口限制 100 万字符） |
+| content | MEDIUMTEXT | 文档正文，富文本 HTML（最大 16MB，接口限制 200 万字符；图片以 URL 引用，不内嵌 base64） |
 | author_id | BIGINT UNSIGNED | 文档作者（创建者），关联 `users.id`，编辑不改变作者 |
 | published_at | DATETIME | 发布日期，数据库默认 `CURRENT_TIMESTAMP` |
 | updated_at | DATETIME | 最近编辑日期，仅在标题或正文变化时刷新 |
 
 索引：`idx_kb_updated (kb_id, updated_at)` 支撑“知识库内按最近编辑排序”的列表；`idx_author_id` 留给“我写的文档”。
-权限沿用知识库：能管理知识库的人才能读写其中的文档。文档增删改会同步刷新知识库的 `updated_at`；删除知识库时同一事务内删除其下所有文档。
+正文由前端富文本编辑器（wangEditor 5）生成，支持字体、字号、文字颜色、背景色、对齐、列表、表格、图片等。
+保存时服务端用 nh3 按白名单过滤 HTML（`app/core/html_sanitizer.py`），阅读页展示前再用 DOMPurify 过滤一次。
+正文图片上传到 `uploads/doc-images/{kb_id}/`，按文件头识别真实格式（png/jpg/gif/webp，≤10MB），删除知识库时整个目录一并删除；阅读页图片按页面宽度等比自适应。
+
+知识库内的全部文档对所有登录用户可见（列表只含标题、作者、时间），打开 / 编辑 / 删除分别需要读 / 写 / 管理权限。文档增删改会同步刷新知识库的 `updated_at`；删除知识库时同一事务内删除其下所有文档。
+
+## 权限表 `permissions`
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| id | BIGINT UNSIGNED PK AUTO_INCREMENT | 主键 |
+| permission_type | VARCHAR(16) | 权限类型：`read` 读 / `write` 写 / `manage` 管理 |
+| user_id | BIGINT UNSIGNED | 被授权用户，关联 `users.id` |
+| target_type | VARCHAR(16) | 授权对象类型：`kb` 知识库 / `doc` 文档 |
+| target_id | BIGINT UNSIGNED | 授权对象 ID |
+| status | VARCHAR(16) | 授权状态：`pending` 待处理 / `accept` 已接受 / `reject` 已拒绝 |
+| initiator_id | BIGINT UNSIGNED | 发起人：等于 `user_id` 为用户申请，否则为管理者邀请 |
+| created_at | DATETIME | 发起时间 |
+| granted_at | DATETIME NULL | 授权时间，状态变为 `accept` 时写入 |
+
+约束：`uk_user_target_status (user_id, target_type, target_id, status)` 保证同一用户对同一对象每种状态最多一条记录：已生效的权限和追加申请的更高权限可以并存（被拒绝后再次发起时复用 reject 记录并重置为 pending）；三个枚举字段都有 CHECK 约束。旧库升级执行 `sql/migrate_permission_upgrade.sql`。
+
+**授权流程**：邀请由管理者发起、被邀请人接受 / 拒绝；申请由用户发起、管理者同意 / 驳回。只有 `accept` 的记录生效。
+已有权限时可追加申请（或被邀请）更高的权限，如读 → 写 / 管理：审批期间原权限照常生效，通过后替换为新权限，驳回则保持原权限；列表和详情接口返回 `pending_permission` 表示审批中的申请。
+
+**有效权限**（`app/services/access_service.py`）：无 < 读 < 写 < 管理 < 拥有者（知识库 owner 或系统管理员）。知识库授权覆盖其下所有文档，文档授权只对该篇生效，两者取高。
+
+| 操作 | 所需权限 |
+|---|---|
+| 查看知识库列表、详情、文档列表 | 无（所有登录用户可见全部知识库和文档，`my_permission` 标明自己的权限） |
+| 查看文档 | 文档读 |
+| 新建文档 | 知识库写 |
+| 编辑文档、上传正文图片 | 文档写 |
+| 删除文档 | 文档管理 |
+| 修改知识库名称 | 知识库管理 |
+| 邀请、审批、修改、撤销授权 | 对象的管理权限（知识库管理者同时管理其下文档的授权） |
+| 删除知识库、转让知识库 | 拥有者 |
+
+对象不存在返回 404；存在但权限不足返回 403（前端据此显示“申请权限”入口，用户可针对知识库或单篇文档申请读 / 写 / 管理权限）。删除文档 / 知识库时同一事务内清理相关授权。
+
+## 通知表 `notifications`
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| id | BIGINT UNSIGNED PK AUTO_INCREMENT | 主键 |
+| user_id | BIGINT UNSIGNED | 接收人 |
+| actor_id | BIGINT UNSIGNED | 操作人 |
+| type | VARCHAR(32) | `perm_invited` 邀请 / `perm_approved` 申请通过 / `perm_rejected` 申请驳回 / `perm_changed` 权限调整 / `perm_revoked` 权限撤销 / `perm_withdrawn` 邀请撤回或申请被删 / `kb_transferred` 知识库转让给我 |
+| content | VARCHAR(512) | 通知内容，发生时生成（不含操作人），对象之后改名 / 删除不影响 |
+| target_type / target_id / kb_id | | 相关对象，前端拼跳转链接 |
+| is_read | TINYINT(1) | 是否已读 |
+| created_at | DATETIME | 通知时间 |
+
+别人变更了我的权限时，在同一事务中写入通知；自己操作自己的记录（申请、撤回、放弃）不通知。前端顶部铃铛每 30 秒轮询未读数，有新通知时弹出提醒，点击跳转到相关知识库 / 文档。旧 MySQL 库启动时自动建表。
 
 ## 数据访问层（MyBatis 风格）
 
@@ -132,16 +185,29 @@ Mapper 方法：`select_by_id`、`select_by_username`、`select_by_email`、`cou
 | PATCH | /api/admin/users/{id}/status | 启用 / 禁用 / 注销 | 管理员 |
 | PATCH | /api/admin/users/{id}/vip | 设置 / 取消 VIP | 管理员 |
 | POST | /api/knowledge-bases | 创建知识库（创建者即管理员） | 登录 |
-| GET | /api/knowledge-bases | 我管理的知识库，分页，支持 keyword | 登录 |
-| GET | /api/knowledge-bases/{id} | 知识库详情 | 知识库管理员 |
-| PUT | /api/knowledge-bases/{id} | 修改名称 | 知识库管理员 |
-| PATCH | /api/knowledge-bases/{id}/owner | 转让管理员 | 知识库管理员 |
-| DELETE | /api/knowledge-bases/{id} | 删除知识库（连同其下文档） | 知识库管理员 |
-| POST | /api/knowledge-bases/{kb_id}/documents | 新建文档（当前用户为作者） | 知识库管理员 |
-| GET | /api/knowledge-bases/{kb_id}/documents | 文档列表，不含正文，支持标题 keyword | 知识库管理员 |
-| GET | /api/knowledge-bases/{kb_id}/documents/{id} | 文档详情（含正文） | 知识库管理员 |
-| PUT | /api/knowledge-bases/{kb_id}/documents/{id} | 编辑标题和正文 | 知识库管理员 |
-| DELETE | /api/knowledge-bases/{kb_id}/documents/{id} | 删除文档 | 知识库管理员 |
+| GET | /api/knowledge-bases | 知识库列表，分页，支持 keyword；`scope=all`（默认，全部）/ `mine`（拥有的 + 被授权的），返回 `my_permission` | 登录 |
+| GET | /api/knowledge-bases/{id} | 知识库详情 | 登录 |
+| PUT | /api/knowledge-bases/{id} | 修改名称 | 知识库管理 |
+| PATCH | /api/knowledge-bases/{id}/owner | 转让管理员 | 拥有者 |
+| DELETE | /api/knowledge-bases/{id} | 删除知识库（连同其下文档） | 拥有者 |
+| POST | /api/knowledge-bases/{kb_id}/documents | 新建文档（当前用户为作者） | 知识库写 |
+| GET | /api/knowledge-bases/{kb_id}/documents | 全部文档，不含正文，支持标题 keyword，返回每篇的 `my_permission` | 登录 |
+| POST | /api/knowledge-bases/{kb_id}/documents/images | 上传正文图片，返回图片 URL | 知识库或其中某篇文档写 |
+| GET | /api/knowledge-bases/{kb_id}/documents/{id} | 文档详情（含正文） | 文档读 |
+| PUT | /api/knowledge-bases/{kb_id}/documents/{id} | 编辑标题和正文 | 文档写 |
+| DELETE | /api/knowledge-bases/{kb_id}/documents/{id} | 删除文档 | 文档管理 |
+| POST | /api/permissions/invitations | 邀请用户（按用户名），被邀请人接受后生效 | 对象管理权限 |
+| POST | /api/permissions/applications | 申请权限，管理者同意后生效 | 登录 |
+| GET | /api/permissions/mine | 与我有关的授权，可按 status 筛选 | 登录 |
+| GET | /api/permissions/approvals | 待我审批的申请 | 登录 |
+| GET | /api/notifications | 我的通知，分页，`unread_only` 只看未读，返回 `unread` 未读总数 | 登录 |
+| POST | /api/notifications/{id}/read | 标记已读 | 本人 |
+| POST | /api/notifications/read-all | 全部标记已读 | 登录 |
+| GET | /api/permissions?target_type=&target_id= | 某个知识库 / 文档的授权列表 | 对象管理权限 |
+| POST | /api/permissions/{id}/accept | 接受邀请 / 同意申请 | 被邀请人 / 对象管理权限 |
+| POST | /api/permissions/{id}/reject | 拒绝邀请 / 驳回申请 | 被邀请人 / 对象管理权限 |
+| PATCH | /api/permissions/{id} | 修改权限类型 | 对象管理权限 |
+| DELETE | /api/permissions/{id} | 撤销 / 放弃 / 撤回 | 对象管理权限 / 被授权人 / 待处理请求的发起人 |
 
 ## 设计要点
 

@@ -25,6 +25,15 @@ def select_by_id(conn: Connection, id: int) -> Document | None:
     return _row_to_doc(conn.execute(text(sql), {"id": id}).mappings().first())
 
 
+def select_brief_by_ids(conn: Connection, ids: list[int]) -> list[dict]:
+    """批量查询文档（不含正文），授权列表展示文档标题用。"""
+    if not ids:
+        return []
+    params = {f"id{i}": v for i, v in enumerate(ids)}
+    sql = f"SELECT {BRIEF_COLUMN_LIST} FROM documents WHERE id IN ({', '.join(':' + k for k in params)})"
+    return [dict(row) for row in conn.execute(text(sql), params).mappings().all()]
+
+
 def _build_where(kb_id: int, keyword: str | None) -> tuple[str, dict]:
     """
     <where>
@@ -44,7 +53,9 @@ def count_by_kb(conn: Connection, kb_id: int, keyword: str | None) -> int:
     return conn.execute(text(f"SELECT COUNT(*) FROM documents{where}"), params).scalar_one()
 
 
-def select_page_by_kb(conn: Connection, kb_id: int, keyword: str | None, offset: int, limit: int) -> list[dict]:
+def select_page_by_kb(
+    conn: Connection, kb_id: int, keyword: str | None, offset: int, limit: int
+) -> list[dict]:
     """返回不含 content 的行（dict），按最近编辑倒序。"""
     where, params = _build_where(kb_id, keyword)
     sql = (

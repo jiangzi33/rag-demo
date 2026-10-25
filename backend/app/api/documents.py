@@ -11,13 +11,13 @@ from app.services import document_service as doc_service
 router = APIRouter(prefix="/knowledge-bases/{kb_id}/documents", tags=["文档"])
 
 
-@router.post("", response_model=Resp[DocumentOut], summary="新建文档（当前用户为作者）")
+@router.post("", response_model=Resp[DocumentOut], summary="新建文档（需要知识库写权限，当前用户为作者）")
 def create(kb_id: int, body: DocumentIn, user: User = Depends(get_current_user), db: Connection = Depends(get_db)):
-    doc = doc_service.create(db, user, kb_id, body)
-    return Resp(data=doc_service.to_out(db, doc))
+    doc, level = doc_service.create(db, user, kb_id, body)
+    return Resp(data=doc_service.to_out(db, user, doc, level))
 
 
-@router.get("", response_model=Resp[Page[DocumentBriefOut]], summary="知识库内的文档列表（不含正文）")
+@router.get("", response_model=Resp[Page[DocumentBriefOut]], summary="知识库内的全部文档（不含正文，所有人可见）")
 def list_docs(
     kb_id: int,
     page: int = Query(1, ge=1),
@@ -38,21 +38,21 @@ async def upload_image(
     return Resp(data=ImageOut(url=url))
 
 
-@router.get("/{doc_id}", response_model=Resp[DocumentOut], summary="文档详情（含正文）")
+@router.get("/{doc_id}", response_model=Resp[DocumentOut], summary="文档详情（含正文，需要读权限）")
 def detail(kb_id: int, doc_id: int, user: User = Depends(get_current_user), db: Connection = Depends(get_db)):
-    doc = doc_service.get_or_404(db, user, kb_id, doc_id)
-    return Resp(data=doc_service.to_out(db, doc))
+    doc, level = doc_service.get_readable(db, user, kb_id, doc_id)
+    return Resp(data=doc_service.to_out(db, user, doc, level))
 
 
-@router.put("/{doc_id}", response_model=Resp[DocumentOut], summary="编辑文档标题和正文")
+@router.put("/{doc_id}", response_model=Resp[DocumentOut], summary="编辑文档标题和正文（需要写权限）")
 def update(
     kb_id: int, doc_id: int, body: DocumentIn, user: User = Depends(get_current_user), db: Connection = Depends(get_db)
 ):
-    doc = doc_service.update(db, user, kb_id, doc_id, body)
-    return Resp(data=doc_service.to_out(db, doc))
+    doc, level = doc_service.update(db, user, kb_id, doc_id, body)
+    return Resp(data=doc_service.to_out(db, user, doc, level))
 
 
-@router.delete("/{doc_id}", response_model=Resp[None], summary="删除文档")
+@router.delete("/{doc_id}", response_model=Resp[None], summary="删除文档（需要管理权限）")
 def delete(kb_id: int, doc_id: int, user: User = Depends(get_current_user), db: Connection = Depends(get_db)):
     doc_service.delete(db, user, kb_id, doc_id)
     return Resp(message="删除成功")

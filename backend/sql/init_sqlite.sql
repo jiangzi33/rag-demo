@@ -39,3 +39,35 @@ CREATE TABLE IF NOT EXISTS documents
 
 CREATE INDEX IF NOT EXISTS idx_doc_kb_updated ON documents (kb_id, updated_at);
 CREATE INDEX IF NOT EXISTS idx_doc_author_id ON documents (author_id);
+
+CREATE TABLE IF NOT EXISTS permissions
+(
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    permission_type VARCHAR(16) NOT NULL CHECK (permission_type IN ('read', 'write', 'manage')),
+    user_id         INTEGER     NOT NULL,
+    target_type     VARCHAR(16) NOT NULL CHECK (target_type IN ('kb', 'doc')),
+    target_id       INTEGER     NOT NULL,
+    status          VARCHAR(16) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accept', 'reject')),
+    initiator_id    INTEGER     NOT NULL,
+    created_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    granted_at      DATETIME    NULL,
+    UNIQUE (user_id, target_type, target_id, status)
+);
+
+CREATE INDEX IF NOT EXISTS idx_perm_target ON permissions (target_type, target_id, status);
+
+CREATE TABLE IF NOT EXISTS notifications
+(
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     INTEGER      NOT NULL,
+    actor_id    INTEGER      NOT NULL,
+    type        VARCHAR(32)  NOT NULL,
+    content     VARCHAR(512) NOT NULL,
+    target_type VARCHAR(16)  NULL,
+    target_id   INTEGER      NULL,
+    kb_id       INTEGER      NULL,
+    is_read     TINYINT      NOT NULL DEFAULT 0,
+    created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_notice_user_read ON notifications (user_id, is_read);

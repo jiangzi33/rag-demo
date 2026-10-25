@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="880ec66c-824a-4c13-b694-e09c51d987e0" name="Changes" comment="first version: user and knowledge database，file">
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/api/documents.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/documents.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/api/knowledge_bases.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/knowledge_bases.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/core/exceptions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/core/exceptions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/db/session.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/db/session.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/mapper/document_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/mapper/document_mapper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/mapper/knowledge_base_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/mapper/knowledge_base_mapper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/schemas/document.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas/document.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/schemas/knowledge_base.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas/knowledge_base.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/services/document_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/document_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/services/knowledge_base_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/knowledge_base_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/sql/init.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/sql/init.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/sql/init_sqlite.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/sql/init_sqlite.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/tests/test_knowledge_bases.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tests/test_knowledge_bases.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/css/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/css/style.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/js/api.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/api.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/app.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/js/docs.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/docs.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/js/pages.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/pages.js" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="41" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "jiangzi33"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/jiangzi33/rag-demo.git",
+    "accountId": "e9332552-ac81-4c29-b27e-279824010730"
+  }
+}]]></component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.4631684564658858" />
+      <entry key="MS500" value="3.306574186935524" />
+      <entry key="S2" value="6.794990765399963" />
+      <entry key="S5" value="10.298385961174246" />
+      <entry key="S10" value="12.834304440499022" />
+      <entry key="S30" value="15.365455498437738" />
+      <entry key="S60" value="16.146682354789505" />
+      <entry key="M2" value="16.56387398218535" />
+      <entry key="M5" value="16.82321636060375" />
+      <entry key="M10" value="16.911214096634005" />
+      <entry key="M15" value="16.940721433215447" />
+      <entry key="M30" value="16.970316636317513" />
+      <entry key="H1" value="16.985148364638015" />
+      <entry key="H2" value="16.996445901625187" />
+      <entry key="H4" value="17.228913515896938" />
+      <entry key="D1" value="24.070408270766126" />
+      <entry key="W1" value="29.69829741920815" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="0.0" />
+      <entry key="M5" value="0.0" />
+      <entry key="M10" value="0.0" />
+      <entry key="M15" value="0.0" />
+      <entry key="M30" value="0.0" />
+      <entry key="H1" value="0.0" />
+      <entry key="H2" value="0.0" />
+      <entry key="H4" value="0.0" />
+      <entry key="D1" value="0.0" />
+      <entry key="W1" value="0.0" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="1.4050237783386375" />
+      <entry key="MS500" value="3.2721716572985553" />
+      <entry key="S2" value="6.7775747252042375" />
+      <entry key="S5" value="10.286516685626545" />
+      <entry key="S10" value="12.826180390841039" />
+      <entry key="S30" value="15.36195154475356" />
+      <entry key="S60" value="16.144802544002495" />
+      <entry key="M2" value="16.562899535672074" />
+      <entry key="M5" value="16.822817939172552" />
+      <entry key="M10" value="16.911013415051634" />
+      <entry key="M15" value="16.94058731634708" />
+      <entry key="M30" value="16.97024941273457" />
+      <entry key="H1" value="16.98511471137883" />
+      <entry key="H2" value="16.996428930361887" />
+      <entry key="H4" value="17.22890100067779" />
+      <entry key="D1" value="24.070385895858777" />
+      <entry key="W1" value="29.698291829218427" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3KxbULFFkizLlj9CeIYoYiFTfvh" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "main",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "org.jetbrains.plugins.github.ui.GithubSettingsConfigurable"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-c59985aa861c-c2ffad84badb-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-261.24374.152" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="880ec66c-824a-4c13-b694-e09c51d987e0" name="Changes" comment="" />
+      <created>1792502181033</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1792502181033</updated>
+    </task>
+    <task id="LOCAL-00001" summary="first version: user and knowledge database">
+      <option name="closed" value="true" />
+      <created>1792831997679</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1792831997679</updated>
+    </task>
+    <task id="LOCAL-00002" summary="first version: user and knowledge database">
+      <option name="closed" value="true" />
+      <created>1792832017917</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1792832017917</updated>
+    </task>
+    <task id="LOCAL-00003" summary="first version: user and knowledge database，file">
+      <option name="closed" value="true" />
+      <created>1792835615664</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1792835615664</updated>
+    </task>
+    <task id="LOCAL-00004" summary="first version: user and knowledge database，file">
+      <option name="closed" value="true" />
+      <created>1792835687997</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1792835687997</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="first version: user and knowledge database" />
+    <MESSAGE value="first version: user and knowledge database，file" />
+    <option name="LAST_COMMIT_MESSAGE" value="first version: user and knowledge database，file" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>8</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>
