@@ -11,6 +11,7 @@ const NOTICE_TYPE = {
   perm_revoked: { title: '权限被撤销', type: 'warning' },
   perm_withdrawn: { title: '请求已撤回', type: 'warning' },
   kb_transferred: { title: '知识库转让', type: 'success' },
+  link_joined: { title: '通过链接加入', type: 'success' },
 }
 
 const noticeStore = Vue.reactive({ unread: 0, lastId: null })

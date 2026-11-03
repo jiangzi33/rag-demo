@@ -9,7 +9,7 @@ from app.core.config import settings
 from app.core.exceptions import BizError, ErrorCode
 from app.mapper import document_mapper
 from app.mapper import knowledge_base_mapper as kb_mapper
-from app.mapper import permission_mapper, user_mapper
+from app.mapper import invite_link_mapper, permission_mapper, user_mapper
 from app.models.document import Document
 from app.models.permission import TargetType
 from app.models.user import User
@@ -83,6 +83,7 @@ def delete(conn: Connection, user: User, kb_id: int, doc_id: int) -> None:
     """删除文档：需要文档（或所在知识库）的管理权限。"""
     doc, _ = access.require_doc(conn, user, kb_id, doc_id, Level.MANAGE)
     permission_mapper.delete_by_target(conn, TargetType.DOC, doc.id)
+    invite_link_mapper.delete_by_target(conn, TargetType.DOC, doc.id)
     document_mapper.delete_by_id(conn, doc.id)
     kb_mapper.touch(conn, kb_id)
     conn.commit()

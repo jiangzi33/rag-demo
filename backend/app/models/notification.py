@@ -11,6 +11,7 @@ class NotificationType(StrEnum):
     PERM_REVOKED = "perm_revoked"  # 权限被撤销
     PERM_WITHDRAWN = "perm_withdrawn"  # 待处理的邀请被撤回 / 申请被删除
     KB_TRANSFERRED = "kb_transferred"  # 知识库被转让给我
+    LINK_JOINED = "link_joined"  # 有人通过我生成的邀请链接获得了权限
 
 
 @dataclass

@@ -160,6 +160,22 @@ def insert(
     return conn.execute(text(sql), params).lastrowid
 
 
+def insert_accepted(
+    conn: Connection, permission_type: PermissionType, user_id: int, target_type: TargetType, target_id: int,
+    initiator_id: int,
+) -> int:
+    """直接写入一条已生效的记录（通过邀请链接加入），返回自增主键 id。"""
+    sql = f"""
+        INSERT INTO permissions (permission_type, user_id, target_type, target_id, status, initiator_id, granted_at)
+        VALUES (:permission_type, :user_id, :target_type, :target_id, '{_ACCEPT}', :initiator_id, CURRENT_TIMESTAMP)
+    """
+    params = {
+        "permission_type": permission_type.value, "user_id": user_id, "target_type": target_type.value,
+        "target_id": target_id, "initiator_id": initiator_id,
+    }
+    return conn.execute(text(sql), params).lastrowid
+
+
 # ==================== 修改 update ====================
 
 def reset_to_pending(conn: Connection, id: int, permission_type: PermissionType, initiator_id: int) -> int:

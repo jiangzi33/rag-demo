@@ -9,6 +9,10 @@ const confirmRule = (form, field = 'password') => ({
   trigger: 'blur',
 })
 
+// 登录 / 注册后回到原页面：只允许知识库页面和邀请链接（未登录打开邀请链接时先登录 / 注册），其余一律进入知识库主页
+const safeRedirect = (redirect) =>
+  typeof redirect === 'string' && (redirect.startsWith('/kb') || redirect.startsWith('/invite/')) ? redirect : HOME_PATH
+
 // ---------------- 登录 ----------------
 const LoginPage = {
   template: `
@@ -24,7 +28,7 @@ const LoginPage = {
         </el-form-item>
         <el-button type="primary" class="full" :loading="loading" @click="submit">登 录</el-button>
       </el-form>
-      <div class="auth-foot">还没有账号？<router-link to="/register">立即注册</router-link></div>
+      <div class="auth-foot">还没有账号？<router-link :to="{ path: '/register', query: $route.query }">立即注册</router-link></div>
     </el-card>
   </div>`,
   setup() {
@@ -43,9 +47,7 @@ const LoginPage = {
       try {
         auth.setLogin(await api.login(form))
         ElMessage.success('登录成功')
-        // 只有登录前访问的是某个知识库页面时才回到原页面，其余一律进入知识库主页
-        const redirect = route.query.redirect
-        router.replace(typeof redirect === 'string' && redirect.startsWith('/kb') ? redirect : HOME_PATH)
+        router.replace(safeRedirect(route.query.redirect))
       } finally {
         loading.value = false
       }
@@ -78,11 +80,12 @@ const RegisterPage = {
         </el-form-item>
         <el-button type="primary" class="full" :loading="loading" @click="submit">注 册</el-button>
       </el-form>
-      <div class="auth-foot">已有账号？<router-link to="/login">去登录</router-link></div>
+      <div class="auth-foot">已有账号？<router-link :to="{ path: '/login', query: $route.query }">去登录</router-link></div>
     </el-card>
   </div>`,
   setup() {
     const router = VueRouter.useRouter()
+    const route = VueRouter.useRoute()
     const formRef = ref()
     const loading = ref(false)
     const form = reactive({ username: '', nickname: '', email: '', password: '', confirm: '' })
@@ -97,7 +100,7 @@ const RegisterPage = {
         const { confirm, ...payload } = form
         auth.setLogin(await api.register({ ...payload, nickname: payload.nickname || null }))
         ElMessage.success('注册成功')
-        router.replace(HOME_PATH)
+        router.replace(safeRedirect(route.query.redirect))
       } finally {
         loading.value = false
       }

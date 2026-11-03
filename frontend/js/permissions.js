@@ -126,9 +126,121 @@ const NoAccess = {
   },
 }
 
+// ---------------- 邀请链接（成员与权限抽屉中使用） ----------------
+// 打开链接即直接获得权限并跳转到目标对象；生成人失去管理权限后链接自动失效
+const inviteLinkUrl = (token) => `${location.origin}${location.pathname}#/invite/${token}`
+
+// 非 HTTPS 环境下 navigator.clipboard 不可用，退回为弹窗手动复制
+const copyText = async (text) => {
+  try {
+    await navigator.clipboard.writeText(text)
+    ElMessage.success('链接已复制')
+  } catch {
+    ElMessageBox.alert(text, '请手动复制链接', { confirmButtonText: '好的' })
+  }
+}
+
+const LINK_EXPIRES = [
+  { value: 1, label: '1 天' },
+  { value: 7, label: '7 天' },
+  { value: 30, label: '30 天' },
+  { value: 0, label: '永久有效' },
+]
+
+const InviteLinkPanel = {
+  props: { targetType: String, targetId: [Number, String] },
+  template: `
+  <div class="invite-link-panel">
+    <h4 class="sub-title">邀请链接</h4>
+    <p class="muted perm-hint">把链接发给对方，对方登录后打开即可直接获得权限并进入该{{ TARGET_LABEL[targetType] }}，无需再接受邀请。</p>
+    <el-form :inline="true" class="invite-form" @submit.prevent="create">
+      <el-form-item>
+        <el-select v-model="form.permission_type" style="width: 110px">
+          <el-option v-for="t in PERMISSION_TYPES" :key="t.value" :label="t.label + '权限'" :value="t.value" />
+        </el-select>
+      </el-form-item>
+      <el-form-item>
+        <el-select v-model="form.expires_in_days" style="width: 110px">
+          <el-option v-for="e in LINK_EXPIRES" :key="e.value" :label="e.label" :value="e.value" />
+        </el-select>
+      </el-form-item>
+      <el-form-item>
+        <el-input-number v-model="form.max_uses" :min="1" :max="10000" placeholder="不限次数" controls-position="right" style="width: 130px" />
+      </el-form-item>
+      <el-form-item><el-button type="primary" :loading="creating" @click="create">生成链接</el-button></el-form-item>
+    </el-form>
+
+    <el-table :data="links" v-loading="loading" empty-text="还没有邀请链接" size="small">
+      <el-table-column label="权限" width="70">
+        <template #default="{ row }">{{ PERMISSION_TYPE_LABEL[row.permission_type] }}</template>
+      </el-table-column>
+      <el-table-column label="有效期至" min-width="150">
+        <template #default="{ row }"><span class="muted">{{ row.expires_at ? formatTime(row.expires_at) : '永久有效' }}</span></template>
+      </el-table-column>
+      <el-table-column label="已使用" width="90">
+        <template #default="{ row }">{{ row.use_count }}{{ row.max_uses ? ' / ' + row.max_uses : '' }}</template>
+      </el-table-column>
+      <el-table-column label="状态" width="80">
+        <template #default="{ row }">
+          <el-tag :type="row.valid ? 'success' : 'info'" size="small">{{ row.valid ? '有效' : '已失效' }}</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" width="120" fixed="right">
+        <template #default="{ row }">
+          <el-button v-if="row.valid" link type="primary" @click="copy(row)">复制</el-button>
+          <el-button link type="danger" @click="remove(row)">{{ row.valid ? '撤销' : '删除' }}</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+  </div>`,
+  setup(props) {
+    const links = Vue.ref([])
+    const loading = Vue.ref(false)
+    const creating = Vue.ref(false)
+    const form = Vue.reactive({ permission_type: 'read', expires_in_days: 7, max_uses: undefined })
+
+    const load = async () => {
+      loading.value = true
+      try {
+        links.value = await api.listInviteLinks(props.targetType, props.targetId)
+      } finally {
+        loading.value = false
+      }
+    }
+    const create = async () => {
+      creating.value = true
+      try {
+        const link = await api.createInviteLink({
+          target_type: props.targetType, target_id: Number(props.targetId), permission_type: form.permission_type,
+          expires_in_days: form.expires_in_days || null, max_uses: form.max_uses || null,
+        })
+        await copyText(inviteLinkUrl(link.token))
+        load()
+      } finally {
+        creating.value = false
+      }
+    }
+    const copy = (row) => copyText(inviteLinkUrl(row.token))
+    const remove = async (row) => {
+      const action = row.valid ? '撤销该链接？撤销后链接立即失效，已通过链接获得的权限不受影响' : '删除这条已失效的链接？'
+      const ok = await ElMessageBox.confirm(`确定要${action}`, '提示', { type: 'warning' }).catch(() => false)
+      if (!ok) return
+      await api.removeInviteLink(row.id)
+      ElMessage.success('已完成')
+      load()
+    }
+
+    Vue.onMounted(load)
+    return {
+      links, loading, creating, form, create, copy, remove, formatTime,
+      PERMISSION_TYPES, PERMISSION_TYPE_LABEL, TARGET_LABEL, LINK_EXPIRES,
+    }
+  },
+}
+
 // ---------------- 成员与权限抽屉（知识库 / 文档共用） ----------------
 const PermissionDrawer = {
-  components: { UserCell },
+  components: { UserCell, InviteLinkPanel },
   props: { modelValue: Boolean, targetType: String, targetId: [Number, String], targetName: String },
   emits: ['update:modelValue'],
   template: `
@@ -185,6 +297,9 @@ const PermissionDrawer = {
         </template>
       </el-table-column>
     </el-table>
+
+    <!-- 每次打开抽屉重新挂载，刷新链接列表 -->
+    <invite-link-panel v-if="modelValue" :key="targetType + targetId" :target-type="targetType" :target-id="targetId" />
   </el-drawer>`,
   setup(props) {
     const me = Vue.computed(() => auth.user)
@@ -395,5 +510,36 @@ const PermissionCenterPage = {
       tab, loading, invitations, approvals, granted, applied, todoCount, applyDialog,
       load, decide, remove, reapply, targetLink, formatTime, TARGET_LABEL, PERMISSION_TYPE_LABEL, PERMISSION_STATUS,
     }
+  },
+}
+
+// ---------------- 打开邀请链接 ----------------
+// /#/invite/{token}：未登录时先登录 / 注册再回到这里；获得权限后跳转到目标知识库 / 文档
+const InviteLinkPage = {
+  template: `
+  <div class="page">
+    <el-result v-if="error" icon="warning" title="无法使用该邀请链接" :sub-title="error">
+      <template #extra><el-button type="primary" @click="$router.replace('/kb')">返回知识库</el-button></template>
+    </el-result>
+    <div v-else v-loading="true" element-loading-text="正在加入..." class="invite-loading" />
+  </div>`,
+  setup() {
+    const route = VueRouter.useRoute()
+    const router = VueRouter.useRouter()
+    const error = Vue.ref('')
+
+    Vue.onMounted(async () => {
+      try {
+        const r = await api.redeemInviteLink(route.params.token)
+        const target = `${TARGET_LABEL[r.target_type]}「${r.target_name}」`
+        if (r.granted) ElMessage.success(`已获得${target}的${PERMISSION_TYPE_LABEL[r.permission_type]}权限`)
+        else ElMessage.info(`你已拥有${target}的${PERM_LABEL[r.my_permission]}权限`)
+        refreshPermissionBadge()
+        router.replace(targetLink(r))
+      } catch (e) {
+        error.value = e.message
+      }
+    })
+    return { error }
   },
 }

@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from app.core.exceptions import BizError, ErrorCode
 from app.mapper import document_mapper
 from app.mapper import knowledge_base_mapper as kb_mapper
-from app.mapper import permission_mapper, user_mapper
+from app.mapper import invite_link_mapper, permission_mapper, user_mapper
 from app.models.knowledge_base import KnowledgeBase
 from app.models.notification import NotificationType
 from app.models.permission import TargetType
@@ -112,8 +112,9 @@ def transfer_owner(conn: Connection, user: User, kb_id: int, owner_id: int) -> K
 
 def delete(conn: Connection, user: User, kb_id: int) -> None:
     kb, _ = access.require_kb(conn, user, kb_id, Level.OWNER)
-    # 同一事务内依次删除授权、文档、知识库，避免留下孤儿数据（授权要在文档之前删，需要按文档反查知识库）
+    # 同一事务内依次删除授权和邀请链接、文档、知识库，避免留下孤儿数据（授权要在文档之前删，需要按文档反查知识库）
     permission_mapper.delete_by_kb(conn, kb.id)
+    invite_link_mapper.delete_by_kb(conn, kb.id)
     document_mapper.delete_by_kb_id(conn, kb.id)
     kb_mapper.delete_by_id(conn, kb.id)
     conn.commit()

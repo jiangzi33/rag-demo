@@ -38,7 +38,8 @@ def init_db() -> None:
                 raise RuntimeError(f"{table} 表不存在，请先执行: mysql -uroot -p < sql/init.sql") from e
         if not is_sqlite:
             _upgrade_permission_unique_key(conn)
-            _create_notifications_table(conn)
+            for table in ("notifications", "invite_links"):
+                _create_table_if_missing(conn, table)
 
 
 def _upgrade_permission_unique_key(conn: Connection) -> None:
@@ -53,9 +54,9 @@ def _upgrade_permission_unique_key(conn: Connection) -> None:
         conn.commit()
 
 
-def _create_notifications_table(conn: Connection) -> None:
-    """旧库升级：执行 sql/init.sql 中 notifications 表的建表语句（CREATE TABLE IF NOT EXISTS，已存在时跳过）。"""
+def _create_table_if_missing(conn: Connection, table: str) -> None:
+    """旧库升级：执行 sql/init.sql 中该表的建表语句（CREATE TABLE IF NOT EXISTS，已存在时跳过）。"""
     script = (BACKEND_DIR / "sql" / "init.sql").read_text(encoding="utf-8")
-    stmt = next(s for s in script.split(";") if "CREATE TABLE IF NOT EXISTS notifications" in s)
+    stmt = next(s for s in script.split(";") if f"CREATE TABLE IF NOT EXISTS {table}\n" in s)
     conn.exec_driver_sql(stmt)
     conn.commit()

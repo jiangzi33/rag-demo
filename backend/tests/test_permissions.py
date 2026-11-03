@@ -25,7 +25,7 @@ def client():
         from app.db.session import engine
 
         with engine.connect() as conn:
-            for table in ("notifications", "permissions", "documents", "knowledge_bases"):
+            for table in ("notifications", "invite_links", "permissions", "documents", "knowledge_bases"):
                 conn.execute(text(f"DELETE FROM {table}"))
             conn.execute(text("DELETE FROM users WHERE email LIKE '%@perm.com'"))
             conn.commit()
@@ -271,3 +271,85 @@ def test_permission_notifications(client):
     assert client.get("/api/notifications", headers=hu, params={"unread_only": True}).json()["data"]["total"] == 6
     client.post("/api/notifications/read-all", headers=hu)
     assert notices()["unread"] == 0
+
+
+def test_invite_link(client):
+    ho, uid_o = login(client, "lowner")
+    ha, uid_a = login(client, "lalice")
+    hb, uid_b = login(client, "lbob")
+    hc, uid_c = login(client, "lcarol")
+
+    kb = client.post("/api/knowledge-bases", headers=ho, json={"name": "链接测试库"}).json()["data"]
+    docs_url = f"/api/knowledge-bases/{kb['id']}/documents"
+    doc = client.post(docs_url, headers=ho, json={"title": "链接文档", "content": "<p>x</p>"}).json()["data"]
+    links_url = "/api/permissions/invite-links"
+    redeem = lambda token, h: client.post(f"{links_url}/{token}/redeem", headers=h)  # noqa: E731
+
+    # 生成：需要管理权限
+    body = {"target_type": "doc", "target_id": doc["id"], "permission_type": "write", "max_uses": 2}
+    assert client.post(links_url, headers=ha, json=body).status_code == 403
+    link = client.post(links_url, headers=ho, json=body).json()["data"]
+    assert link["valid"] and link["use_count"] == 0 and link["max_uses"] == 2 and link["expires_at"]
+    assert link["creator"]["username"] == "lowner"
+    params = {"target_type": "doc", "target_id": doc["id"]}
+    assert client.get(links_url, headers=ha, params=params).status_code == 403
+    assert [l["id"] for l in client.get(links_url, headers=ho, params=params).json()["data"]] == [link["id"]]
+
+    # 打开链接：直接获得写权限，返回跳转目标；需要登录
+    assert client.post(f"{links_url}/{link['token']}/redeem").status_code == 401
+    assert client.put(f"{docs_url}/{doc['id']}", headers=ha, json={"title": "改", "content": "<p>y</p>"}).status_code == 403
+    r = redeem(link["token"], ha).json()["data"]
+    assert r == {
+        "target_type": "doc", "target_id": doc["id"], "target_name": "链接文档", "kb_id": kb["id"],
+        "permission_type": "write", "granted": True, "my_permission": "write",
+    }
+    assert client.put(f"{docs_url}/{doc['id']}", headers=ha, json={"title": "改", "content": "<p>y</p>"}).status_code == 200
+    granted = client.get("/api/permissions/mine", headers=ha, params={"status": "accept"}).json()["data"]
+    assert len(granted) == 1 and granted[0]["initiator_id"] == uid_o and granted[0]["granted_at"]
+    # 生成人收到通知
+    notices = client.get("/api/notifications", headers=ho).json()["data"]["items"]
+    assert notices[0]["type"] == "link_joined" and notices[0]["actor"]["username"] == "lalice"
+
+    # 再次打开：已拥有，不占用次数；拥有者打开也直接跳转
+    r = redeem(link["token"], ha).json()["data"]
+    assert r["granted"] is False and r["my_permission"] == "write"
+    assert redeem(link["token"], ho).json()["data"]["my_permission"] == "owner"
+    assert client.get(links_url, headers=ho, params=params).json()["data"][0]["use_count"] == 1
+
+    # 已有较低权限 + 被覆盖的待处理申请：提升为链接权限，申请被清理
+    inv = {"username": "lbob", "target_type": "doc", "target_id": doc["id"], "permission_type": "read"}
+    pid = client.post("/api/permissions/invitations", headers=ho, json=inv).json()["data"]["id"]
+    client.post(f"/api/permissions/{pid}/accept", headers=hb)
+    client.post("/api/permissions/applications", headers=hb, json={**params, "permission_type": "write"})
+    assert redeem(link["token"], hb).json()["data"]["granted"] is True
+    mine = client.get("/api/permissions/mine", headers=hb).json()["data"]
+    assert [(p["status"], p["permission_type"]) for p in mine] == [("accept", "write")]
+
+    # 次数用完
+    r = redeem(link["token"], hc)
+    assert r.status_code == 400 and r.json()["code"] == 40041
+    assert client.get(links_url, headers=ho, params=params).json()["data"][0]["valid"] is False
+
+    # 知识库链接；生成人失去管理权限后链接失效
+    inv = {"username": "lalice", "target_type": "kb", "target_id": kb["id"], "permission_type": "manage"}
+    pid = client.post("/api/permissions/invitations", headers=ho, json=inv).json()["data"]["id"]
+    client.post(f"/api/permissions/{pid}/accept", headers=ha)
+    kb_link = client.post(links_url, headers=ha, json={"target_type": "kb", "target_id": kb["id"], "permission_type": "read",
+                                                       "expires_in_days": None}).json()["data"]
+    assert kb_link["expires_at"] is None
+    client.delete(f"/api/permissions/{pid}", headers=ho)
+    r = redeem(kb_link["token"], hc)
+    assert r.status_code == 400 and r.json()["code"] == 40041
+
+    # 撤销
+    kb_link = client.post(links_url, headers=ho, json={"target_type": "kb", "target_id": kb["id"], "permission_type": "read"}).json()["data"]
+    assert client.delete(f"{links_url}/{kb_link['id']}", headers=ha).status_code == 403
+    assert client.delete(f"{links_url}/{kb_link['id']}", headers=ho).status_code == 200
+    assert redeem(kb_link["token"], hc).status_code == 404
+
+    # 删除文档 / 知识库时一并清理链接
+    kb_link = client.post(links_url, headers=ho, json={"target_type": "kb", "target_id": kb["id"], "permission_type": "read"}).json()["data"]
+    client.delete(f"{docs_url}/{doc['id']}", headers=ho)
+    assert client.get(links_url, headers=ho, params=params).status_code == 404
+    client.delete(f"/api/knowledge-bases/{kb['id']}", headers=ho)
+    assert redeem(kb_link["token"], hc).status_code == 404

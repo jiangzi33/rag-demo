@@ -103,6 +103,8 @@ a { color: #00b96b; text-decoration: none; }
 .menu-badge .el-badge__content { top: 14px; }
 .perm-hint { margin: 0 0 12px; }
 .invite-form .el-form-item { margin-bottom: 12px; }
+.invite-link-panel { margin-top: 24px; }
+.invite-loading { height: 240px; }
 .dir-label { margin-left: 6px; }
 .time-cell { font-size: 12px; }
 .apply-target { margin: 0 0 14px; }

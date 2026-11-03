@@ -5,8 +5,11 @@ from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.models.permission import PermissionStatus, TargetType
 from app.models.user import User
-from app.schemas.permission import ApplicationIn, InvitationIn, PermissionOut, PermissionTypeIn
+from app.schemas.permission import (
+    ApplicationIn, InvitationIn, InviteLinkIn, InviteLinkOut, InviteLinkRedeemOut, PermissionOut, PermissionTypeIn,
+)
 from app.schemas.user import Resp
+from app.services import invite_link_service as link_service
 from app.services import permission_service as perm_service
 
 router = APIRouter(prefix="/permissions", tags=["权限管理"])
@@ -24,6 +27,29 @@ def invite(body: InvitationIn, user: User = Depends(get_current_user), db: Conne
 @router.post("/applications", response_model=Resp[PermissionOut], summary="申请权限（管理者同意后生效）")
 def apply(body: ApplicationIn, user: User = Depends(get_current_user), db: Connection = Depends(get_db)):
     return _one(db, perm_service.apply(db, user, body))
+
+
+@router.post("/invite-links", response_model=Resp[InviteLinkOut], summary="生成邀请链接（需要对象的管理权限，打开链接即获得权限）")
+def create_invite_link(body: InviteLinkIn, user: User = Depends(get_current_user), db: Connection = Depends(get_db)):
+    return Resp(data=link_service.to_out(db, [link_service.create(db, user, body)])[0])
+
+
+@router.get("/invite-links", response_model=Resp[list[InviteLinkOut]], summary="某个知识库 / 文档的邀请链接（需要管理权限）")
+def list_invite_links(
+    target_type: TargetType, target_id: int, user: User = Depends(get_current_user), db: Connection = Depends(get_db)
+):
+    return Resp(data=link_service.to_out(db, link_service.list_by_target(db, user, target_type, target_id)))
+
+
+@router.delete("/invite-links/{link_id}", response_model=Resp[None], summary="撤销邀请链接（需要管理权限）")
+def remove_invite_link(link_id: int, user: User = Depends(get_current_user), db: Connection = Depends(get_db)):
+    link_service.remove(db, user, link_id)
+    return Resp(message="已撤销")
+
+
+@router.post("/invite-links/{token}/redeem", response_model=Resp[InviteLinkRedeemOut], summary="打开邀请链接：获得权限并返回跳转目标")
+def redeem_invite_link(token: str, user: User = Depends(get_current_user), db: Connection = Depends(get_db)):
+    return Resp(data=link_service.redeem(db, user, token))
 
 
 @router.get("/mine", response_model=Resp[list[PermissionOut]], summary="与我有关的授权（收到的邀请、我的申请、已获得的权限）")

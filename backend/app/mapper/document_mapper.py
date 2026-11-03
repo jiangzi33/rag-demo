@@ -52,7 +52,7 @@ def count_by_kb(conn: Connection, kb_id: int, keyword: str | None) -> int:
     where, params = _build_where(kb_id, keyword)
     return conn.execute(text(f"SELECT COUNT(*) FROM documents{where}"), params).scalar_one()
 
-
+#当我们需要建立一对多的关系时，尽可能把关系维护在多的一方，一个知识库包含多个文档，我们通过文档表添加知识库id字段，去实现点开知识库能够找到下面的所有文档
 def select_page_by_kb(
     conn: Connection, kb_id: int, keyword: str | None, offset: int, limit: int
 ) -> list[dict]:

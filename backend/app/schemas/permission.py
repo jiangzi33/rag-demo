@@ -45,3 +45,40 @@ class PermissionOut(BaseModel):
     direction: Literal["invite", "apply"]  # invite-管理者邀请 apply-用户申请
     created_at: datetime
     granted_at: datetime | None
+
+
+# ---------- 邀请链接 ----------
+
+class InviteLinkIn(BaseModel):
+    """管理者生成邀请链接：任何登录用户打开链接即直接获得该权限"""
+    target_type: TargetType
+    target_id: int = Field(ge=1)
+    permission_type: PermissionType
+    expires_in_days: int | None = Field(default=7, ge=1, le=365, description="有效天数，为空表示永久有效")
+    max_uses: int | None = Field(default=None, ge=1, le=10000, description="可使用次数，为空表示不限")
+
+
+class InviteLinkOut(BaseModel):
+    id: int
+    token: str  # 前端拼成 /#/invite/{token}
+    target_type: TargetType
+    target_id: int
+    permission_type: PermissionType
+    creator_id: int
+    creator: UserBriefOut | None = None
+    expires_at: datetime | None
+    max_uses: int | None
+    use_count: int
+    valid: bool  # 未过期且未用完
+    created_at: datetime
+
+
+class InviteLinkRedeemOut(BaseModel):
+    """打开邀请链接的结果，前端据此跳转到目标对象"""
+    target_type: TargetType
+    target_id: int
+    target_name: str
+    kb_id: int
+    permission_type: PermissionType  # 链接授予的权限
+    granted: bool  # 本次是否新获得 / 提升了权限；已拥有同等或更高权限时为 False
+    my_permission: str  # 打开链接后的有效权限：owner / manage / write / read

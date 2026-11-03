@@ -64,6 +64,7 @@ const router = VueRouter.createRouter({
         { path: 'kb/:kbId(\\d+)/docs/:docId(\\d+)', component: DocViewPage, meta: { auth: true } },
         { path: 'kb/:kbId(\\d+)/docs/:docId(\\d+)/edit', component: DocEditPage, meta: { auth: true } },
         { path: 'permissions', component: PermissionCenterPage, meta: { auth: true } },
+        { path: 'invite/:token', component: InviteLinkPage, meta: { auth: true } },
         { path: 'notifications', component: NotificationsPage, meta: { auth: true } },
         { path: 'profile', component: ProfilePage, meta: { auth: true } },
         { path: 'admin/users', component: AdminUsersPage, meta: { auth: true, admin: true } },

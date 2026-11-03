@@ -84,6 +84,12 @@ const api = {
   rejectPermission: (id) => http.post(`/permissions/${id}/reject`),
   changePermissionType: (id, permission_type) => http.patch(`/permissions/${id}`, { permission_type }),
   removePermission: (id) => http.delete(`/permissions/${id}`),
+  // 邀请链接：打开 /#/invite/{token} 即获得权限
+  createInviteLink: (data) => http.post('/permissions/invite-links', data),
+  listInviteLinks: (targetType, targetId) =>
+    http.get('/permissions/invite-links', { params: { target_type: targetType, target_id: targetId } }),
+  removeInviteLink: (id) => http.delete(`/permissions/invite-links/${id}`),
+  redeemInviteLink: (token) => http.post(`/permissions/invite-links/${encodeURIComponent(token)}/redeem`, null, { silent: true }),
   // 通知：返回分页 + unread 未读总数
   listNotifications: (params, config = {}) => http.get('/notifications', { params, ...config }),
   readNotification: (id) => http.post(`/notifications/${id}/read`),

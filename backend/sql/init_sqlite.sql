@@ -71,3 +71,19 @@ CREATE TABLE IF NOT EXISTS notifications
 );
 
 CREATE INDEX IF NOT EXISTS idx_notice_user_read ON notifications (user_id, is_read);
+
+CREATE TABLE IF NOT EXISTS invite_links
+(
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    token           VARCHAR(64) NOT NULL UNIQUE,
+    target_type     VARCHAR(16) NOT NULL CHECK (target_type IN ('kb', 'doc')),
+    target_id       INTEGER     NOT NULL,
+    permission_type VARCHAR(16) NOT NULL CHECK (permission_type IN ('read', 'write', 'manage')),
+    creator_id      INTEGER     NOT NULL,
+    expires_at      DATETIME    NULL,
+    max_uses        INTEGER     NULL,
+    use_count       INTEGER     NOT NULL DEFAULT 0,
+    created_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_link_target ON invite_links (target_type, target_id);

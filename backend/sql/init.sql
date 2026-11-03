@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS notifications
     id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
     user_id     BIGINT UNSIGNED NOT NULL COMMENT '接收人，关联 users.id',
     actor_id    BIGINT UNSIGNED NOT NULL COMMENT '操作人，关联 users.id',
-    type        VARCHAR(32)     NOT NULL COMMENT '类型：perm_invited / perm_approved / perm_rejected / perm_changed / perm_revoked / perm_withdrawn / kb_transferred',
+    type        VARCHAR(32)     NOT NULL COMMENT '类型：perm_invited / perm_approved / perm_rejected / perm_changed / perm_revoked / perm_withdrawn / kb_transferred / link_joined',
     content     VARCHAR(512)    NOT NULL COMMENT '通知内容（发生时生成，不含操作人）',
     target_type VARCHAR(16)     NULL     DEFAULT NULL COMMENT '相关对象类型：kb / doc',
     target_id   BIGINT UNSIGNED NULL     DEFAULT NULL COMMENT '相关对象ID',
@@ -93,3 +93,24 @@ CREATE TABLE IF NOT EXISTS notifications
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci COMMENT ='站内通知表';
+
+CREATE TABLE IF NOT EXISTS invite_links
+(
+    id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    token           VARCHAR(64)     NOT NULL COMMENT '链接令牌，前端拼成 /#/invite/{token}',
+    target_type     VARCHAR(16)     NOT NULL COMMENT '授权对象类型：kb-知识库 doc-文档',
+    target_id       BIGINT UNSIGNED NOT NULL COMMENT '授权对象ID，关联 knowledge_bases.id 或 documents.id',
+    permission_type VARCHAR(16)     NOT NULL COMMENT '打开链接获得的权限：read-读 write-写 manage-管理',
+    creator_id      BIGINT UNSIGNED NOT NULL COMMENT '生成人，关联 users.id；失去管理权限后链接失效',
+    expires_at      DATETIME        NULL     DEFAULT NULL COMMENT '过期时间，NULL 表示永久有效',
+    max_uses        INT UNSIGNED    NULL     DEFAULT NULL COMMENT '可使用次数，NULL 表示不限',
+    use_count       INT UNSIGNED    NOT NULL DEFAULT 0 COMMENT '已使用次数（新获得 / 提升权限时计数）',
+    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '生成时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_token (token),
+    KEY idx_target (target_type, target_id),
+    CONSTRAINT chk_link_target_type CHECK (target_type IN ('kb', 'doc')),
+    CONSTRAINT chk_link_permission_type CHECK (permission_type IN ('read', 'write', 'manage'))
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci COMMENT ='邀请链接表';

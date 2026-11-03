@@ -4,28 +4,29 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="880ec66c-824a-4c13-b694-e09c51d987e0" name="Changes" comment="first version: user and knowledge database，file">
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/api/documents.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/documents.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/api/knowledge_bases.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/knowledge_bases.py" afterDir="false" />
+    <list default="true" id="880ec66c-824a-4c13-b694-e09c51d987e0" name="Changes" comment="first version: permission,">
+      <change afterPath="$PROJECT_DIR$/backend/app/mapper/invite_link_mapper.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/models/invite_link.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/api/permissions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/permissions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/core/exceptions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/core/exceptions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/db/session.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/db/session.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/mapper/document_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/mapper/document_mapper.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/mapper/knowledge_base_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/mapper/knowledge_base_mapper.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/schemas/document.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas/document.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/schemas/knowledge_base.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas/knowledge_base.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/mapper/permission_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/mapper/permission_mapper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/notification.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/notification.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/schemas/permission.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas/permission.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/services/document_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/document_service.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/services/knowledge_base_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/knowledge_base_service.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/sql/init.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/sql/init.sql" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/sql/init_sqlite.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/sql/init_sqlite.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/tests/test_knowledge_bases.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tests/test_knowledge_bases.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/tests/test_permissions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tests/test_permissions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/css/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/css/style.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/js/api.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/api.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/app.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/js/docs.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/docs.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/js/notifications.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/notifications.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/js/pages.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/pages.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/js/permissions.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/permissions.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -33,46 +34,46 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="41" />
+    <option name="cachedIndexableFilesCount" value="72" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "jiangzi33"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;jiangzi33&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/jiangzi33/rag-demo.git",
-    "accountId": "e9332552-ac81-4c29-b27e-279824010730"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/jiangzi33/rag-demo.git&quot;,
+    &quot;accountId&quot;: &quot;e9332552-ac81-4c29-b27e-279824010730&quot;
   }
-}]]></component>
+}</component>
   <component name="McpProjectServerCommands">
     <commands />
     <urls />
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.4631684564658858" />
-      <entry key="MS500" value="3.306574186935524" />
-      <entry key="S2" value="6.794990765399963" />
-      <entry key="S5" value="10.298385961174246" />
-      <entry key="S10" value="12.834304440499022" />
-      <entry key="S30" value="15.365455498437738" />
-      <entry key="S60" value="16.146682354789505" />
-      <entry key="M2" value="16.56387398218535" />
-      <entry key="M5" value="16.82321636060375" />
-      <entry key="M10" value="16.911214096634005" />
-      <entry key="M15" value="16.940721433215447" />
-      <entry key="M30" value="16.970316636317513" />
-      <entry key="H1" value="16.985148364638015" />
-      <entry key="H2" value="16.996445901625187" />
-      <entry key="H4" value="17.228913515896938" />
-      <entry key="D1" value="24.070408270766126" />
-      <entry key="W1" value="29.69829741920815" />
+      <entry key="MS100" value="1.0000386278257438" />
+      <entry key="MS500" value="1.1318718442698712" />
+      <entry key="S2" value="1.9518386689335172" />
+      <entry key="S5" value="3.5430820144637023" />
+      <entry key="S10" value="5.892908169619363" />
+      <entry key="S30" value="13.317267593641478" />
+      <entry key="S60" value="20.676380814718947" />
+      <entry key="M2" value="27.865324458192244" />
+      <entry key="M5" value="34.34456720524714" />
+      <entry key="M10" value="37.114410263739174" />
+      <entry key="M15" value="38.52370562396257" />
+      <entry key="M30" value="42.02606648655446" />
+      <entry key="H1" value="46.68945423186056" />
+      <entry key="H2" value="50.81225271548819" />
+      <entry key="H4" value="53.7757323349136" />
+      <entry key="D1" value="63.20432949853427" />
+      <entry key="W1" value="69.54408778086835" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -94,23 +95,23 @@
       <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="1.4050237783386375" />
-      <entry key="MS500" value="3.2721716572985553" />
-      <entry key="S2" value="6.7775747252042375" />
-      <entry key="S5" value="10.286516685626545" />
-      <entry key="S10" value="12.826180390841039" />
-      <entry key="S30" value="15.36195154475356" />
-      <entry key="S60" value="16.144802544002495" />
-      <entry key="M2" value="16.562899535672074" />
-      <entry key="M5" value="16.822817939172552" />
-      <entry key="M10" value="16.911013415051634" />
-      <entry key="M15" value="16.94058731634708" />
-      <entry key="M30" value="16.97024941273457" />
-      <entry key="H1" value="16.98511471137883" />
-      <entry key="H2" value="16.996428930361887" />
-      <entry key="H4" value="17.22890100067779" />
-      <entry key="D1" value="24.070385895858777" />
-      <entry key="W1" value="29.698291829218427" />
+      <entry key="MS100" value="0.9526713932374573" />
+      <entry key="MS500" value="1.1184454430549178" />
+      <entry key="S2" value="1.9440630991927192" />
+      <entry key="S5" value="3.537670941118129" />
+      <entry key="S10" value="5.88845647646848" />
+      <entry key="S30" value="13.309985807942493" />
+      <entry key="S60" value="20.665065569425273" />
+      <entry key="M2" value="27.854379751677044" />
+      <entry key="M5" value="34.337945993323004" />
+      <entry key="M10" value="37.11060060319675" />
+      <entry key="M15" value="38.52104033244656" />
+      <entry key="M30" value="42.02465986460672" />
+      <entry key="H1" value="46.688726082700335" />
+      <entry key="H2" value="50.811880497044825" />
+      <entry key="H4" value="53.77554058525801" />
+      <entry key="D1" value="63.204277484696114" />
+      <entry key="W1" value="69.54407786941924" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -128,6 +129,7 @@
     "RunOnceActivity.MCP Project settings loaded": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
@@ -187,7 +189,15 @@
       <option name="project" value="LOCAL" />
       <updated>1792835687997</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="first version: permission,">
+      <option name="closed" value="true" />
+      <created>1792921727278</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1792921727278</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -196,7 +206,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="first version: user and knowledge database" />
     <MESSAGE value="first version: user and knowledge database，file" />
-    <option name="LAST_COMMIT_MESSAGE" value="first version: user and knowledge database，file" />
+    <MESSAGE value="first version: permission," />
+    <option name="LAST_COMMIT_MESSAGE" value="first version: permission," />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
