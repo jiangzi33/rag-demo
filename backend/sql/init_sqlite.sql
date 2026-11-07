@@ -87,3 +87,17 @@ CREATE TABLE IF NOT EXISTS invite_links
 );
 
 CREATE INDEX IF NOT EXISTS idx_link_target ON invite_links (target_type, target_id);
+
+CREATE TABLE IF NOT EXISTS document_chunks
+(
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    doc_id       INTEGER       NOT NULL,
+    kb_id        INTEGER       NOT NULL,
+    chunk_index  INTEGER       NOT NULL,
+    heading_path TEXT          NOT NULL,
+    content      TEXT          NOT NULL,
+    created_at   DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (doc_id, chunk_index)
+);
+
+CREATE INDEX IF NOT EXISTS idx_chunk_kb_id ON document_chunks (kb_id);

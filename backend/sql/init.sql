@@ -114,3 +114,19 @@ CREATE TABLE IF NOT EXISTS invite_links
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci COMMENT ='邀请链接表';
+
+CREATE TABLE IF NOT EXISTS document_chunks
+(
+    id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    doc_id       BIGINT UNSIGNED NOT NULL COMMENT '所属文档，关联 documents.id',
+    kb_id        BIGINT UNSIGNED NOT NULL COMMENT '所属知识库（冗余，检索时按知识库过滤），关联 knowledge_bases.id',
+    chunk_index  INT UNSIGNED    NOT NULL COMMENT '在文档内的序号，从 0 开始',
+    heading_path TEXT            NOT NULL COMMENT '所在章节的标题路径（JSON 数组）',
+    content      TEXT            NOT NULL COMMENT '块正文',
+    created_at   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '切分时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_doc_index (doc_id, chunk_index),
+    KEY idx_kb_id (kb_id)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci COMMENT ='文档切分块表（RAG 检索用，文档新建 / 编辑时重新生成）';

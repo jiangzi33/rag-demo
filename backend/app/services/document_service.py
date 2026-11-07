@@ -7,6 +7,7 @@ from sqlalchemy import Connection
 
 from app.core.config import settings
 from app.core.exceptions import BizError, ErrorCode
+from app.mapper import document_chunk_mapper as chunk_mapper
 from app.mapper import document_mapper
 from app.mapper import knowledge_base_mapper as kb_mapper
 from app.mapper import invite_link_mapper, permission_mapper, user_mapper
@@ -16,6 +17,7 @@ from app.models.user import User
 from app.schemas.document import DocumentBriefOut, DocumentIn, DocumentOut
 from app.schemas.user import UserBriefOut
 from app.services import access_service as access
+from app.services import chunk_service
 from app.services.access_service import Level
 
 
@@ -64,9 +66,11 @@ def create(conn: Connection, user: User, kb_id: int, data: DocumentIn) -> tuple[
     """在知识库中新建文档需要对知识库有写权限。"""
     _, kb_lvl = access.require_kb(conn, user, kb_id, Level.WRITE)
     doc_id = document_mapper.insert(conn, kb_id=kb_id, title=data.title, content=data.content, author_id=user.id)
+    doc = document_mapper.select_by_id(conn, doc_id)
+    chunk_service.rebuild(conn, doc)  # 与文档同一事务写入切分块，供 RAG 检索
     kb_mapper.touch(conn, kb_id)
     conn.commit()
-    return document_mapper.select_by_id(conn, doc_id), kb_lvl
+    return doc, kb_lvl
 
 
 def update(conn: Connection, user: User, kb_id: int, doc_id: int, data: DocumentIn) -> tuple[Document, Level]:
@@ -74,9 +78,11 @@ def update(conn: Connection, user: User, kb_id: int, doc_id: int, data: Document
     if data.title == doc.title and data.content == doc.content:
         return doc, lvl  # 内容没变，不刷新最近编辑日期
     document_mapper.update_content(conn, doc.id, data.title, data.content)
+    doc = document_mapper.select_by_id(conn, doc.id)
+    chunk_service.rebuild(conn, doc)  # 标题也参与切分块的上下文，所以只改标题也要重新切分
     kb_mapper.touch(conn, kb_id)
     conn.commit()
-    return document_mapper.select_by_id(conn, doc.id), lvl
+    return doc, lvl
 
 
 def delete(conn: Connection, user: User, kb_id: int, doc_id: int) -> None:
@@ -84,6 +90,7 @@ def delete(conn: Connection, user: User, kb_id: int, doc_id: int) -> None:
     doc, _ = access.require_doc(conn, user, kb_id, doc_id, Level.MANAGE)
     permission_mapper.delete_by_target(conn, TargetType.DOC, doc.id)
     invite_link_mapper.delete_by_target(conn, TargetType.DOC, doc.id)
+    chunk_mapper.delete_by_doc_id(conn, doc.id)
     document_mapper.delete_by_id(conn, doc.id)
     kb_mapper.touch(conn, kb_id)
     conn.commit()

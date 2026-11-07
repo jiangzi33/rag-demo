@@ -4,29 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="880ec66c-824a-4c13-b694-e09c51d987e0" name="Changes" comment="first version: permission,">
-      <change afterPath="$PROJECT_DIR$/backend/app/mapper/invite_link_mapper.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/app/models/invite_link.py" afterDir="false" />
+    <list default="true" id="880ec66c-824a-4c13-b694-e09c51d987e0" name="Changes" comment="first version: permission, invite link">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/api/permissions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/permissions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/core/exceptions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/core/exceptions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/core/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/core/config.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/db/session.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/db/session.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/mapper/document_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/mapper/document_mapper.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/mapper/permission_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/mapper/permission_mapper.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/notification.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/notification.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/schemas/permission.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas/permission.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/services/document_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/document_service.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/services/knowledge_base_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/knowledge_base_service.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/sql/init.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/sql/init.sql" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/sql/init_sqlite.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/sql/init_sqlite.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/tests/test_permissions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tests/test_permissions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/css/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/css/style.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/js/api.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/api.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/app.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/js/notifications.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/notifications.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/js/pages.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/pages.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/js/permissions.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/permissions.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,7 +19,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="72" />
+    <option name="cachedIndexableFilesCount" value="75" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -57,23 +42,23 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0000386278257438" />
-      <entry key="MS500" value="1.1318718442698712" />
-      <entry key="S2" value="1.9518386689335172" />
-      <entry key="S5" value="3.5430820144637023" />
-      <entry key="S10" value="5.892908169619363" />
-      <entry key="S30" value="13.317267593641478" />
-      <entry key="S60" value="20.676380814718947" />
-      <entry key="M2" value="27.865324458192244" />
-      <entry key="M5" value="34.34456720524714" />
-      <entry key="M10" value="37.114410263739174" />
-      <entry key="M15" value="38.52370562396257" />
-      <entry key="M30" value="42.02606648655446" />
-      <entry key="H1" value="46.68945423186056" />
-      <entry key="H2" value="50.81225271548819" />
-      <entry key="H4" value="53.7757323349136" />
-      <entry key="D1" value="63.20432949853427" />
-      <entry key="W1" value="69.54408778086835" />
+      <entry key="MS100" value="1.0000003145952707" />
+      <entry key="MS500" value="1.0526161723488592" />
+      <entry key="S2" value="1.8234386915641139" />
+      <entry key="S5" value="3.049233980196808" />
+      <entry key="S10" value="4.608023853522773" />
+      <entry key="S30" value="7.651388149506639" />
+      <entry key="S60" value="9.081691620921935" />
+      <entry key="M2" value="9.969313285193909" />
+      <entry key="M5" value="10.569010443038975" />
+      <entry key="M10" value="10.812086229776899" />
+      <entry key="M15" value="11.19403865571743" />
+      <entry key="M30" value="14.878104666802457" />
+      <entry key="H1" value="25.280177347127065" />
+      <entry key="H2" value="39.119085723700586" />
+      <entry key="H4" value="51.007833004669315" />
+      <entry key="D1" value="71.16522466776846" />
+      <entry key="W1" value="80.0562662137152" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -95,23 +80,23 @@
       <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.9526713932374573" />
-      <entry key="MS500" value="1.1184454430549178" />
-      <entry key="S2" value="1.9440630991927192" />
-      <entry key="S5" value="3.537670941118129" />
-      <entry key="S10" value="5.88845647646848" />
-      <entry key="S30" value="13.309985807942493" />
-      <entry key="S60" value="20.665065569425273" />
-      <entry key="M2" value="27.854379751677044" />
-      <entry key="M5" value="34.337945993323004" />
-      <entry key="M10" value="37.11060060319675" />
-      <entry key="M15" value="38.52104033244656" />
-      <entry key="M30" value="42.02465986460672" />
-      <entry key="H1" value="46.688726082700335" />
-      <entry key="H2" value="50.811880497044825" />
-      <entry key="H4" value="53.77554058525801" />
-      <entry key="D1" value="63.204277484696114" />
-      <entry key="W1" value="69.54407786941924" />
+      <entry key="MS100" value="0.5586437899519753" />
+      <entry key="MS500" value="0.9391702726230582" />
+      <entry key="S2" value="1.7831156424735504" />
+      <entry key="S5" value="3.0258985011019544" />
+      <entry key="S10" value="4.587718884114024" />
+      <entry key="S30" value="7.635713213436215" />
+      <entry key="S60" value="9.07135596333709" />
+      <entry key="M2" value="9.963328471443056" />
+      <entry key="M5" value="10.566389702327402" />
+      <entry key="M10" value="10.810732027897403" />
+      <entry key="M15" value="11.193105138854804" />
+      <entry key="M30" value="14.87751273724343" />
+      <entry key="H1" value="25.279723049342593" />
+      <entry key="H2" value="39.11876380145385" />
+      <entry key="H4" value="51.007632338097615" />
+      <entry key="D1" value="71.16516548057724" />
+      <entry key="W1" value="80.05625498963296" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -123,25 +108,25 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "git-widget-placeholder": "main",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "org.jetbrains.plugins.github.ui.GithubSettingsConfigurable"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;org.jetbrains.plugins.github.ui.GithubSettingsConfigurable&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -197,7 +182,15 @@
       <option name="project" value="LOCAL" />
       <updated>1792921727278</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="first version: permission, invite link">
+      <option name="closed" value="true" />
+      <created>1793720112772</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1793720112772</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -207,7 +200,8 @@
     <MESSAGE value="first version: user and knowledge database" />
     <MESSAGE value="first version: user and knowledge database，file" />
     <MESSAGE value="first version: permission," />
-    <option name="LAST_COMMIT_MESSAGE" value="first version: permission," />
+    <MESSAGE value="first version: permission, invite link" />
+    <option name="LAST_COMMIT_MESSAGE" value="first version: permission, invite link" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     AVATAR_MAX_BYTES: int = 2 * 1024 * 1024
     DOC_IMAGE_MAX_BYTES: int = 10 * 1024 * 1024
 
+    # RAG 文档切分：每块最大字符数、相邻块的重叠字符数
+    RAG_CHUNK_SIZE: int = 500
+    RAG_CHUNK_OVERLAP: int = 80
+
     @property
     def admin_usernames(self) -> set[str]:
         return {name.strip() for name in self.ADMIN_USERNAMES.split(",") if name.strip()}
