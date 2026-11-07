@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, File, Query, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Query, UploadFile
 from sqlalchemy import Connection
 
 from app.api.deps import get_current_user
@@ -7,13 +7,22 @@ from app.models.user import User
 from app.schemas.document import DocumentBriefOut, DocumentIn, DocumentOut, ImageOut
 from app.schemas.user import Page, Resp
 from app.services import document_service as doc_service
+from app.services import embedding_service
 
 router = APIRouter(prefix="/knowledge-bases/{kb_id}/documents", tags=["文档"])
 
 
 @router.post("", response_model=Resp[DocumentOut], summary="新建文档（需要知识库写权限，当前用户为作者）")
-def create(kb_id: int, body: DocumentIn, user: User = Depends(get_current_user), db: Connection = Depends(get_db)):
+def create(
+    kb_id: int,
+    body: DocumentIn,
+    background_tasks: BackgroundTasks,
+    user: User = Depends(get_current_user),
+    db: Connection = Depends(get_db),
+):
     doc, level = doc_service.create(db, user, kb_id, body)
+    # 响应返回后在后台把切分块转换成向量
+    background_tasks.add_task(embedding_service.embed_document, doc.id)
     return Resp(data=doc_service.to_out(db, user, doc, level))
 
 

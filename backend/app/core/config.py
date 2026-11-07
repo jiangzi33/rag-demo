@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     RAG_CHUNK_OVERLAP: int = 80
 
     # RAG 向量化：OpenAI 兼容的 /embeddings 接口（示例配置见 app/rag/embedder.py）
+    EMBEDDING_ENABLED: bool = True  # 关闭后新建文档不再做向量化（测试 / 未配置 API Key 时）
     EMBEDDING_BASE_URL: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
     EMBEDDING_MODEL: str = "text-embedding-v3"
     EMBEDDING_API_KEY: str = ""

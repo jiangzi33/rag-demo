@@ -4,20 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="880ec66c-824a-4c13-b694-e09c51d987e0" name="Changes" comment="first version: RAG chunk">
-      <change afterPath="$PROJECT_DIR$/backend/app/mapper/document_chunk_mapper.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/app/models/document_chunk.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/app/rag/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/app/rag/chunker.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/app/rag/embedder.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/app/rag/html_parser.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/app/services/chunk_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/tests/test_chunker.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/tests/test_document_chunks.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/tests/test_embedder.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/uploads/avatars/20_f6313889b4df4fef827219db7efab223.png" afterDir="false" />
+    <list default="true" id="880ec66c-824a-4c13-b694-e09c51d987e0" name="Changes" comment="first version: RAG chunk and embedding tools">
+      <change beforePath="$PROJECT_DIR$/backend/app/api/documents.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/documents.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/core/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/core/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/backend/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,23 +37,23 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0" />
-      <entry key="MS500" value="1.000275817191057" />
-      <entry key="S2" value="1.1288710398493487" />
-      <entry key="S5" value="1.4406178967951768" />
-      <entry key="S10" value="1.663790551902614" />
-      <entry key="S30" value="1.8723223949854955" />
-      <entry key="S60" value="1.93398241077413" />
-      <entry key="M2" value="1.968521737587578" />
-      <entry key="M5" value="2.3436921184395962" />
-      <entry key="M10" value="3.981044544309149" />
-      <entry key="M15" value="5.614855347192499" />
-      <entry key="M30" value="10.45776550512586" />
-      <entry key="H1" value="21.061917630701828" />
-      <entry key="H2" value="35.96937975666601" />
-      <entry key="H4" value="49.532140431430996" />
-      <entry key="D1" value="72.33309272342449" />
-      <entry key="W1" value="81.92186431201111" />
+      <entry key="MS100" value="1.0000000000022395" />
+      <entry key="MS500" value="1.0047002092104145" />
+      <entry key="S2" value="1.3304380576399395" />
+      <entry key="S5" value="1.927822248662056" />
+      <entry key="S10" value="2.3504044172816947" />
+      <entry key="S30" value="2.751188587387187" />
+      <entry key="S60" value="2.881158401721026" />
+      <entry key="M2" value="3.077141191900981" />
+      <entry key="M5" value="3.7941445425799007" />
+      <entry key="M10" value="5.342495204588935" />
+      <entry key="M15" value="6.948742359544871" />
+      <entry key="M30" value="11.775412032777076" />
+      <entry key="H1" value="22.296222229660888" />
+      <entry key="H2" value="37.42953552489998" />
+      <entry key="H4" value="51.46053881746933" />
+      <entry key="D1" value="75.06994065957414" />
+      <entry key="W1" value="84.87922293074661" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -86,23 +75,23 @@
       <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.9075191553171609" />
-      <entry key="MS500" value="0.9810521575776713" />
-      <entry key="S2" value="1.123718497508629" />
-      <entry key="S5" value="1.4382515959687547" />
-      <entry key="S10" value="1.6624986214796502" />
-      <entry key="S30" value="1.8718579055313982" />
-      <entry key="S60" value="1.9337451636250014" />
-      <entry key="M2" value="1.96840054109722" />
-      <entry key="M5" value="2.343555230648441" />
-      <entry key="M10" value="3.9807713632070287" />
-      <entry key="M15" value="5.6145373618393055" />
-      <entry key="M30" value="10.457420839516178" />
-      <entry key="H1" value="21.061571015976586" />
-      <entry key="H2" value="35.96909818685887" />
-      <entry key="H4" value="49.531952426490726" />
-      <entry key="D1" value="72.33303405979653" />
-      <entry key="W1" value="81.92185308270382" />
+      <entry key="MS100" value="0.9526379980460709" />
+      <entry key="MS500" value="0.9949976906211525" />
+      <entry key="S2" value="1.3272143067952638" />
+      <entry key="S5" value="1.9259523856931697" />
+      <entry key="S10" value="2.34926427056887" />
+      <entry key="S30" value="2.750743657207997" />
+      <entry key="S60" value="2.880924994221856" />
+      <entry key="M2" value="3.0770137555240686" />
+      <entry key="M5" value="3.794048516746494" />
+      <entry key="M10" value="5.342309394079157" />
+      <entry key="M15" value="6.948502101371456" />
+      <entry key="M30" value="11.775114592364393" />
+      <entry key="H1" value="22.295900595833846" />
+      <entry key="H2" value="37.429263979400645" />
+      <entry key="H4" value="51.460353867147944" />
+      <entry key="D1" value="75.06988204082451" />
+      <entry key="W1" value="84.879211683215" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -114,25 +103,50 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;org.jetbrains.plugins.github.ui.GithubSettingsConfigurable&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python tests.Python tests in test_embedding_service.py.executor": "Run",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "main",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "org.jetbrains.plugins.github.ui.GithubSettingsConfigurable"
   }
-}</component>
+}]]></component>
+  <component name="RunManager">
+    <configuration name="Python tests in test_embedding_service.py" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+      <module name="RAG_demo" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/backend" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
+      <option name="RUN_TOOL" value="" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/backend/tests/test_embedding_service.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python tests.Python tests in test_embedding_service.py" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -204,7 +218,15 @@
       <option name="project" value="LOCAL" />
       <updated>1794044065430</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="first version: RAG chunk and embedding tools">
+      <option name="closed" value="true" />
+      <created>1794044513135</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1794044513135</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -216,7 +238,8 @@
     <MESSAGE value="first version: permission," />
     <MESSAGE value="first version: permission, invite link" />
     <MESSAGE value="first version: RAG chunk" />
-    <option name="LAST_COMMIT_MESSAGE" value="first version: RAG chunk" />
+    <MESSAGE value="first version: RAG chunk and embedding tools" />
+    <option name="LAST_COMMIT_MESSAGE" value="first version: RAG chunk and embedding tools" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
