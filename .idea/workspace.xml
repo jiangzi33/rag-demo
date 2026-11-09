@@ -4,9 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="880ec66c-824a-4c13-b694-e09c51d987e0" name="Changes" comment="first version: RAG chunk and embedding tools">
+    <list default="true" id="880ec66c-824a-4c13-b694-e09c51d987e0" name="Changes" comment="first version: embedding tools">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/api/documents.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/documents.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/api/knowledge_bases.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/knowledge_bases.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/core/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/core/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/rag/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/rag/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/rag/embedder.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/rag/embedder.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/services/embedding_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/embedding_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/backend/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/tests/test_embedder.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tests/test_embedder.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -107,6 +114,7 @@
   "keyToString": {
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "Python tests.Python tests in test_embedding_service.py.executor": "Run",
+    "Python tests.Python tests in test_vector_store.py.executor": "Run",
     "RunOnceActivity.MCP Project settings loaded": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
@@ -123,7 +131,7 @@
     "settings.editor.selected.configurable": "org.jetbrains.plugins.github.ui.GithubSettingsConfigurable"
   }
 }]]></component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python tests.Python tests in test_vector_store.py">
     <configuration name="Python tests in test_embedding_service.py" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
       <module name="RAG_demo" />
       <option name="ENV_FILES" value="" />
@@ -141,8 +149,26 @@
       <option name="_new_targetType" value="&quot;PATH&quot;" />
       <method v="2" />
     </configuration>
+    <configuration name="Python tests in test_vector_store.py" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+      <module name="RAG_demo" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/backend" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
+      <option name="RUN_TOOL" value="" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/backend/tests/test_vector_store.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python tests.Python tests in test_vector_store.py" />
         <item itemvalue="Python tests.Python tests in test_embedding_service.py" />
       </list>
     </recent_temporary>
@@ -226,7 +252,15 @@
       <option name="project" value="LOCAL" />
       <updated>1794044513135</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="first version: embedding tools">
+      <option name="closed" value="true" />
+      <created>1794045024158</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1794045024158</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -239,7 +273,8 @@
     <MESSAGE value="first version: permission, invite link" />
     <MESSAGE value="first version: RAG chunk" />
     <MESSAGE value="first version: RAG chunk and embedding tools" />
-    <option name="LAST_COMMIT_MESSAGE" value="first version: RAG chunk and embedding tools" />
+    <MESSAGE value="first version: embedding tools" />
+    <option name="LAST_COMMIT_MESSAGE" value="first version: embedding tools" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

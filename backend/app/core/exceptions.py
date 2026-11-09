@@ -27,6 +27,7 @@ class ErrorCode:
     USER_DISABLED = 40300
     FORBIDDEN = 40301
     NOT_FOUND = 40400
+    RAG_UNAVAILABLE = 50300  # 向量化服务 / 向量数据库不可用或配置不一致
 
 
 def register_exception_handlers(app: FastAPI) -> None:

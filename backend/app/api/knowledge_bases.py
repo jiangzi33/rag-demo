@@ -1,6 +1,6 @@
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, Query
 from sqlalchemy import Connection
 
 from app.api.deps import get_current_user
@@ -8,6 +8,7 @@ from app.db.session import get_db
 from app.models.user import User
 from app.schemas.knowledge_base import KnowledgeBaseCreateIn, KnowledgeBaseOut, KnowledgeBaseUpdateIn, OwnerTransferIn
 from app.schemas.user import Page, Resp
+from app.services import embedding_service
 from app.services import knowledge_base_service as kb_service
 
 router = APIRouter(prefix="/knowledge-bases", tags=["知识库"])
@@ -55,6 +56,9 @@ def transfer_owner(
 
 
 @router.delete("/{kb_id}", response_model=Resp[None], summary="删除知识库（仅拥有者）")
-def delete(kb_id: int, user: User = Depends(get_current_user), db: Connection = Depends(get_db)):
+def delete(
+    kb_id: int, background_tasks: BackgroundTasks, user: User = Depends(get_current_user), db: Connection = Depends(get_db)
+):
     kb_service.delete(db, user, kb_id)
+    background_tasks.add_task(embedding_service.remove_knowledge_base, kb_id)
     return Resp(message="删除成功")

@@ -62,6 +62,13 @@ def update(
 
 
 @router.delete("/{doc_id}", response_model=Resp[None], summary="删除文档（需要管理权限）")
-def delete(kb_id: int, doc_id: int, user: User = Depends(get_current_user), db: Connection = Depends(get_db)):
+def delete(
+    kb_id: int,
+    doc_id: int,
+    background_tasks: BackgroundTasks,
+    user: User = Depends(get_current_user),
+    db: Connection = Depends(get_db),
+):
     doc_service.delete(db, user, kb_id, doc_id)
+    background_tasks.add_task(embedding_service.remove_document, doc_id)
     return Resp(message="删除成功")

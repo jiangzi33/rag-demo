@@ -27,16 +27,25 @@ class Settings(BaseSettings):
     # RAG 文档切分：每块最大字符数、相邻块的重叠字符数
     RAG_CHUNK_SIZE: int = 500
     RAG_CHUNK_OVERLAP: int = 80
+    RAG_QUESTION_MAX_LENGTH: int = 1000  # 用户问题的最大字符数
 
-    # RAG 向量化：OpenAI 兼容的 /embeddings 接口（示例配置见 app/rag/embedder.py）
-    EMBEDDING_ENABLED: bool = True  # 关闭后新建文档不再做向量化（测试 / 未配置 API Key 时）
-    EMBEDDING_BASE_URL: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-    EMBEDDING_MODEL: str = "text-embedding-v3"
-    EMBEDDING_API_KEY: str = ""
-    EMBEDDING_DIMENSIONS: int | None = None  # 不填使用模型默认维度
-    EMBEDDING_BATCH_SIZE: int = 10
-    EMBEDDING_QUERY_INSTRUCTION: str = ""  # 问题的检索指令前缀，bge 系列中文模型可设为 "为这个句子生成表示以用于检索相关文章："
-    EMBEDDING_TIMEOUT: float = 30
+    # RAG 向量化：本地 Ollama（见 app/rag/embedder.py）
+    EMBEDDING_ENABLED: bool = True  # 关闭后新建文档不再做向量化（测试 / Ollama 未启动时）
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    OLLAMA_EMBEDDING_MODEL: str = "qwen3-embedding:0.6b"
+    OLLAMA_KEEP_ALIVE: str | None = None  # 模型在内存中保留多久，如 "30m"；不填用 Ollama 默认（5 分钟）
+    EMBEDDING_DIMENSIONS: int | None = None  # 不填使用模型默认维度（qwen3-embedding:0.6b 为 1024）
+    EMBEDDING_BATCH_SIZE: int = 16
+    # 问题的检索指令前缀（文档不加），qwen3-embedding 官方推荐格式；换成 bge 系列可改为 "为这个句子生成表示以用于检索相关文章："
+    EMBEDDING_QUERY_INSTRUCTION: str = (
+        "Instruct: Given a question, retrieve relevant passages from the knowledge base that answer the question\nQuery: "
+    )
+    EMBEDDING_TIMEOUT: float = 60
+
+    # RAG 向量库：Milvus（EMBEDDING_ENABLED 关闭时也不读写 Milvus）
+    MILVUS_URI: str = "http://localhost:19530"
+    MILVUS_TOKEN: str = ""  # 开启认证时填 "用户名:密码"
+    MILVUS_COLLECTION: str = "kb_document_chunks"
 
     @property
     def admin_usernames(self) -> set[str]:
