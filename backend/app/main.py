@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import APIRouter, FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 
-from app.api import admin, auth, documents, knowledge_bases, notifications, permissions, users
+from app.api import admin, auth, documents, knowledge_bases, notifications, permissions, qa, search, users
 from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
 from app.db.session import init_db
@@ -27,6 +27,8 @@ api.include_router(knowledge_bases.router)
 api.include_router(documents.router)
 api.include_router(permissions.router)
 api.include_router(notifications.router)
+api.include_router(search.router)
+api.include_router(qa.router)
 app.include_router(api)
 
 

@@ -92,6 +92,15 @@ def exists_accepted_doc_in_kb(
     return conn.execute(text(sql), params).first() is not None
 
 
+def select_accepted_doc_ids_in_kb(conn: Connection, user_id: int, kb_id: int) -> list[int]:
+    """用户在该知识库中有已生效授权（读 / 写 / 管理均含读）的文档 id，RAG 检索限定范围用。"""
+    sql = f"""
+        SELECT DISTINCT p.target_id FROM permissions p JOIN documents d ON d.id = p.target_id
+        WHERE p.user_id = :user_id AND p.target_type = 'doc' AND p.status = '{_ACCEPT}' AND d.kb_id = :kb_id
+    """
+    return [row[0] for row in conn.execute(text(sql), {"user_id": user_id, "kb_id": kb_id}).all()]
+
+
 def _build_where(
     user_id: int | None = None,
     target_type: TargetType | None = None,

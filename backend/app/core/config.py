@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     RAG_CHUNK_SIZE: int = 500
     RAG_CHUNK_OVERLAP: int = 80
     RAG_QUESTION_MAX_LENGTH: int = 1000  # 用户问题的最大字符数
+    RAG_TOP_K: int = 5  # 默认返回最相似的片段数
+    RAG_TOP_K_MAX: int = 20
+    RAG_MIN_SCORE: float | None = None  # 余弦相似度下限，低于它的片段丢弃；不填不过滤
 
     # RAG 向量化：本地 Ollama（见 app/rag/embedder.py）
     EMBEDDING_ENABLED: bool = True  # 关闭后新建文档不再做向量化（测试 / Ollama 未启动时）
@@ -46,6 +49,15 @@ class Settings(BaseSettings):
     MILVUS_URI: str = "http://localhost:19530"
     MILVUS_TOKEN: str = ""  # 开启认证时填 "用户名:密码"
     MILVUS_COLLECTION: str = "kb_document_chunks"
+
+    # 智能问答：检索片段后调用 OpenAI（或兼容 OpenAI 的服务）生成回答，见 app/rag/llm.py
+    OPENAI_API_KEY: str = ""
+    OPENAI_BASE_URL: str = "https://api.openai.com/v1"
+    OPENAI_MODEL: str = "gpt-4.1-mini"
+    OPENAI_TEMPERATURE: float | None = None  # 不填用模型默认值（部分推理模型不支持自定义 temperature）
+    OPENAI_TIMEOUT: float = 120
+    QA_TOP_K: int = 5  # 每个问题检索的片段数（交给大模型的参考资料条数）
+    QA_HISTORY_MESSAGES: int = 6  # 携带的最近对话条数（用户 + 助手），用于理解追问
 
     @property
     def admin_usernames(self) -> set[str]:

@@ -4,16 +4,28 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="880ec66c-824a-4c13-b694-e09c51d987e0" name="Changes" comment="first version: embedding tools">
+    <list default="true" id="880ec66c-824a-4c13-b694-e09c51d987e0" name="Changes" comment="first version: RAG knowledge_bases embedding chunking saving into vector store">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/api/documents.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/documents.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/api/knowledge_bases.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/knowledge_bases.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/core/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/core/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/rag/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/rag/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/rag/embedder.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/rag/embedder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/embedding_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/embedding_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/backend/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/tests/test_embedder.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tests/test_embedder.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/core/exceptions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/core/exceptions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/mapper/document_chunk_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/mapper/document_chunk_mapper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/mapper/permission_mapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/mapper/permission_mapper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/rag/vector_store.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/rag/vector_store.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/schemas/document.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas/document.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/services/access_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/access_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/services/document_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/document_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/services/retrieval_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/retrieval_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/tests/test_document_chunks.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tests/test_document_chunks.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/tests/test_retrieval_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tests/test_retrieval_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/css/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/css/style.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/js/api.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/api.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/app.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/js/docs.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/docs.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/js/pages.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/pages.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,61 +56,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0000000000022395" />
-      <entry key="MS500" value="1.0047002092104145" />
-      <entry key="S2" value="1.3304380576399395" />
-      <entry key="S5" value="1.927822248662056" />
-      <entry key="S10" value="2.3504044172816947" />
-      <entry key="S30" value="2.751188587387187" />
-      <entry key="S60" value="2.881158401721026" />
-      <entry key="M2" value="3.077141191900981" />
-      <entry key="M5" value="3.7941445425799007" />
-      <entry key="M10" value="5.342495204588935" />
-      <entry key="M15" value="6.948742359544871" />
-      <entry key="M30" value="11.775412032777076" />
-      <entry key="H1" value="22.296222229660888" />
-      <entry key="H2" value="37.42953552489998" />
-      <entry key="H4" value="51.46053881746933" />
-      <entry key="D1" value="75.06994065957414" />
-      <entry key="W1" value="84.87922293074661" />
+      <entry key="MS100" value="4.1671235950716115E-41" />
+      <entry key="MS500" value="8.39396736396311E-9" />
+      <entry key="S2" value="0.009571760405505279" />
+      <entry key="S5" value="0.15573876546523857" />
+      <entry key="S10" value="0.3946461596980957" />
+      <entry key="S30" value="0.7682460315036012" />
+      <entry key="S60" value="1.17989103285002" />
+      <entry key="M2" value="2.5104342156475408" />
+      <entry key="M5" value="11.195705717943095" />
+      <entry key="M10" value="30.747394799460114" />
+      <entry key="M15" value="48.01192431626854" />
+      <entry key="M30" value="79.81199221935407" />
+      <entry key="H1" value="105.31062863082748" />
+      <entry key="H2" value="121.6427315556734" />
+      <entry key="H4" value="131.05741083011245" />
+      <entry key="D1" value="152.1125294437852" />
+      <entry key="W1" value="210.4410728181287" />
     </decayedCancelled>
     <decayedSelected>
-      <entry key="MS100" value="0.0" />
-      <entry key="MS500" value="0.0" />
-      <entry key="S2" value="0.0" />
-      <entry key="S5" value="0.0" />
-      <entry key="S10" value="0.0" />
-      <entry key="S30" value="0.0" />
-      <entry key="S60" value="0.0" />
-      <entry key="M2" value="0.0" />
-      <entry key="M5" value="0.0" />
-      <entry key="M10" value="0.0" />
-      <entry key="M15" value="0.0" />
-      <entry key="M30" value="0.0" />
-      <entry key="H1" value="0.0" />
-      <entry key="H2" value="0.0" />
-      <entry key="H4" value="0.0" />
-      <entry key="D1" value="0.0" />
-      <entry key="W1" value="0.0" />
+      <entry key="MS100" value="1.0000000000000169" />
+      <entry key="MS500" value="1.0017578162691279" />
+      <entry key="S2" value="1.2047591744649568" />
+      <entry key="S5" value="1.5302703545082408" />
+      <entry key="S10" value="1.7281966454941673" />
+      <entry key="S30" value="1.8997866602942248" />
+      <entry key="S60" value="1.9653615791792616" />
+      <entry key="M2" value="2.2002694401023373" />
+      <entry key="M5" value="3.328135414324643" />
+      <entry key="M10" value="4.86447548091388" />
+      <entry key="M15" value="5.8828253801475885" />
+      <entry key="M30" value="7.454357055014422" />
+      <entry key="H1" value="8.567268685221508" />
+      <entry key="H2" value="9.237774584584217" />
+      <entry key="H4" value="9.625197458495371" />
+      <entry key="D1" value="10.448866471604555" />
+      <entry key="W1" value="10.900205396144747" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.9526379980460709" />
-      <entry key="MS500" value="0.9949976906211525" />
-      <entry key="S2" value="1.3272143067952638" />
-      <entry key="S5" value="1.9259523856931697" />
-      <entry key="S10" value="2.34926427056887" />
-      <entry key="S30" value="2.750743657207997" />
-      <entry key="S60" value="2.880924994221856" />
-      <entry key="M2" value="3.0770137555240686" />
-      <entry key="M5" value="3.794048516746494" />
-      <entry key="M10" value="5.342309394079157" />
-      <entry key="M15" value="6.948502101371456" />
-      <entry key="M30" value="11.775114592364393" />
-      <entry key="H1" value="22.295900595833846" />
-      <entry key="H2" value="37.429263979400645" />
-      <entry key="H4" value="51.460353867147944" />
-      <entry key="D1" value="75.06988204082451" />
-      <entry key="W1" value="84.879211683215" />
+      <entry key="MS100" value="5.552499039138477E-12" />
+      <entry key="MS500" value="0.005816461508127265" />
+      <entry key="S2" value="0.40179239393296745" />
+      <entry key="S5" value="1.1696388154018749" />
+      <entry key="S10" value="1.8080685156892065" />
+      <entry key="S30" value="2.543606293137919" />
+      <entry key="S60" value="3.071643436940427" />
+      <entry key="M2" value="4.658108934159487" />
+      <entry key="M5" value="14.476160387261514" />
+      <entry key="M10" value="35.566177777975184" />
+      <entry key="M15" value="53.85325124062736" />
+      <entry key="M30" value="87.23628820871608" />
+      <entry key="H1" value="113.85934487430049" />
+      <entry key="H2" value="130.87013328160523" />
+      <entry key="H4" value="140.6771129631432" />
+      <entry key="D1" value="162.5604185379514" />
+      <entry key="W1" value="221.34112911675305" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -260,7 +272,15 @@
       <option name="project" value="LOCAL" />
       <updated>1794045024158</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="first version: RAG knowledge_bases embedding chunking saving into vector store">
+      <option name="closed" value="true" />
+      <created>1794230432035</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1794230432035</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -274,7 +294,8 @@
     <MESSAGE value="first version: RAG chunk" />
     <MESSAGE value="first version: RAG chunk and embedding tools" />
     <MESSAGE value="first version: embedding tools" />
-    <option name="LAST_COMMIT_MESSAGE" value="first version: embedding tools" />
+    <MESSAGE value="first version: RAG knowledge_bases embedding chunking saving into vector store" />
+    <option name="LAST_COMMIT_MESSAGE" value="first version: RAG knowledge_bases embedding chunking saving into vector store" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

@@ -84,14 +84,22 @@ class MilvusVectorStore:
 
     # ---------- 检索 ----------
 
-    def search(self, vector: list[float], kb_ids: list[int], top_k: int = 5) -> list[SearchHit]:
-        """在指定知识库范围内检索最相似的切分块，按相似度从高到低排序。"""
-        if not kb_ids or not self._exists():
+    def search(
+        self, vector: list[float], kb_ids: list[int], top_k: int = 5, doc_ids: list[int] | None = None
+    ) -> list[SearchHit]:
+        """在限定范围内检索最相似的 top_k 个切分块，按相似度从高到低排序。
+        范围 = kb_ids 中的整个知识库 + doc_ids 中的单篇文档（用户只有文档授权时），两者都为空时不检索。"""
+        conditions = []
+        if kb_ids:
+            conditions.append(f"kb_id in {[int(k) for k in kb_ids]}")
+        if doc_ids:
+            conditions.append(f"doc_id in {[int(d) for d in doc_ids]}")
+        if not conditions or not self._exists():
             return []
         results = self._client.search(
             self.collection,
             data=[vector],
-            filter=f"kb_id in {[int(k) for k in kb_ids]}",
+            filter=" or ".join(conditions),
             limit=top_k,
             output_fields=self.OUTPUT_FIELDS,
         )

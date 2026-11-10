@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.core.html_sanitizer import clean_html
 from app.schemas.user import UserBriefOut
@@ -44,6 +44,17 @@ class DocumentBriefOut(BaseModel):
     pending_permission: str | None = None  # 当前用户对该文档待审批的申请：read / write / manage，审批期间 my_permission 不变
     published_at: datetime
     updated_at: datetime
+
+
+class ChunkOut(BaseModel):
+    """文档切分块：从检索结果跳转到文档时，用于在正文中定位并高亮"""
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    doc_id: int
+    chunk_index: int
+    heading_path: list[str]  # 所在章节的标题路径，从高层级到低层级
+    content: str
 
 
 class ImageOut(BaseModel):

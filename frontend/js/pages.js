@@ -491,6 +491,7 @@ const KbDetailPage = {
       <template #content><span class="page-title">{{ kb?.name || '知识库详情' }}</span></template>
       <template #extra v-if="kb">
         <div class="header-actions">
+          <el-button type="primary" plain @click="$router.push({ path: '/search', query: { kb: kb.id } })">在此知识库中检索</el-button>
           <el-button v-if="can('manage')" @click="openMembers('kb', kb.id, kb.name)">成员与权限</el-button>
           <el-button v-else-if="kb.pending_permission" disabled>{{ PERMISSION_TYPE_LABEL[kb.pending_permission] }}权限审批中</el-button>
           <el-button v-else @click="applying = true">申请{{ kb.my_permission ? '更高' : '' }}权限</el-button>

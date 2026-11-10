@@ -4,7 +4,7 @@ from sqlalchemy import Connection
 from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.document import DocumentBriefOut, DocumentIn, DocumentOut, ImageOut
+from app.schemas.document import ChunkOut, DocumentBriefOut, DocumentIn, DocumentOut, ImageOut
 from app.schemas.user import Page, Resp
 from app.services import document_service as doc_service
 from app.services import embedding_service
@@ -51,6 +51,11 @@ async def upload_image(
 def detail(kb_id: int, doc_id: int, user: User = Depends(get_current_user), db: Connection = Depends(get_db)):
     doc, level = doc_service.get_readable(db, user, kb_id, doc_id)
     return Resp(data=doc_service.to_out(db, user, doc, level))
+
+
+@router.get("/{doc_id}/chunks/{chunk_id}", response_model=Resp[ChunkOut], summary="文档的一个切分块（检索结果定位用，需要读权限）")
+def chunk(kb_id: int, doc_id: int, chunk_id: int, user: User = Depends(get_current_user), db: Connection = Depends(get_db)):
+    return Resp(data=ChunkOut.model_validate(doc_service.get_chunk(db, user, kb_id, doc_id, chunk_id)))
 
 
 @router.put("/{doc_id}", response_model=Resp[DocumentOut], summary="编辑文档标题和正文（需要写权限）")

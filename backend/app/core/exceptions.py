@@ -28,6 +28,7 @@ class ErrorCode:
     FORBIDDEN = 40301
     NOT_FOUND = 40400
     RAG_UNAVAILABLE = 50300  # 向量化服务 / 向量数据库不可用或配置不一致
+    LLM_UNAVAILABLE = 50310  # 大模型未配置或调用失败
 
 
 def register_exception_handlers(app: FastAPI) -> None:

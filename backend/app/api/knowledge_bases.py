@@ -62,3 +62,4 @@ def delete(
     kb_service.delete(db, user, kb_id)
     background_tasks.add_task(embedding_service.remove_knowledge_base, kb_id)
     return Resp(message="删除成功")
+

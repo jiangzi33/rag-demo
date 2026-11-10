@@ -6,6 +6,8 @@ const Layout = {
       <div class="brand" @click="$router.push(HOME_PATH)">📚 知识库</div>
       <el-menu mode="horizontal" :ellipsis="false" router :default-active="activeMenu" class="nav">
         <el-menu-item index="/kb">知识库</el-menu-item>
+        <el-menu-item index="/search">内容检索</el-menu-item>
+        <el-menu-item index="/qa">智能问答</el-menu-item>
         <el-menu-item index="/permissions">
           <el-badge :value="permissionBadge.count" :hidden="!permissionBadge.count" :max="99" class="menu-badge">权限中心</el-badge>
         </el-menu-item>
@@ -63,6 +65,8 @@ const router = VueRouter.createRouter({
         { path: 'kb/:kbId(\\d+)/docs/new', component: DocEditPage, meta: { auth: true } },
         { path: 'kb/:kbId(\\d+)/docs/:docId(\\d+)', component: DocViewPage, meta: { auth: true } },
         { path: 'kb/:kbId(\\d+)/docs/:docId(\\d+)/edit', component: DocEditPage, meta: { auth: true } },
+        { path: 'search', component: SearchPage, meta: { auth: true } },
+        { path: 'qa', component: QaPage, meta: { auth: true } },
         { path: 'permissions', component: PermissionCenterPage, meta: { auth: true } },
         { path: 'invite/:token', component: InviteLinkPage, meta: { auth: true } },
         { path: 'notifications', component: NotificationsPage, meta: { auth: true } },

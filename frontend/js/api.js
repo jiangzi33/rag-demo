@@ -68,6 +68,8 @@ const api = {
   createDoc: (kbId, data) => http.post(`/knowledge-bases/${kbId}/documents`, data),
   updateDoc: (kbId, id, data) => http.put(`/knowledge-bases/${kbId}/documents/${id}`, data),
   deleteDoc: (kbId, id) => http.delete(`/knowledge-bases/${kbId}/documents/${id}`),
+  // 文档的一个切分块（从内容检索跳转时定位用）；文档编辑后旧 id 返回 404，由页面自行提示
+  getDocChunk: (kbId, id, chunkId) => http.get(`/knowledge-bases/${kbId}/documents/${id}/chunks/${chunkId}`, { silent: true }),
   uploadDocImage: (kbId, file) => {
     const form = new FormData()
     form.append('file', file)
@@ -94,6 +96,8 @@ const api = {
   listNotifications: (params, config = {}) => http.get('/notifications', { params, ...config }),
   readNotification: (id) => http.post(`/notifications/${id}/read`),
   readAllNotifications: () => http.post('/notifications/read-all'),
+  // 内容检索：按语义相似度检索文档片段；首次调用 Ollama 需加载模型，超时放宽
+  search: (data) => http.post('/search', data, { timeout: 60000 }),
 }
 
 // 与后端 access_service.Level 保持一致：my_permission 为 owner / manage / write / read，无权限时为 null

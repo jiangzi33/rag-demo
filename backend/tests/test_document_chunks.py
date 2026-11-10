@@ -53,18 +53,33 @@ def test_chunks_follow_document_lifecycle(client):
     ]
     assert all(c.kb_id == kb_id for c in chunks)
 
+    # 读取单个切分块（检索结果定位用）：需要读权限，且必须属于该文档
+    url = f"{base}/{doc['id']}/chunks/{chunks[1].id}"
+    r = client.get(url, headers=h).json()["data"]
+    assert r == {"id": chunks[1].id, "doc_id": doc["id"], "chunk_index": 1, "heading_path": ["安装", "Linux"], "content": "执行脚本。"}
+    r2 = client.post("/api/auth/register", json={"username": "chunkother", "email": "chunkother@chunk.com", "password": "abc12345"})
+    other = {"Authorization": f"Bearer {r2.json()['data']['access_token']}"}
+    assert client.get(url, headers=other).status_code == 403
+    other_doc = client.post(base, headers=h, json={"title": "另一篇", "content": "<p>x</p>"}).json()["data"]
+    assert client.get(f"{base}/{other_doc['id']}/chunks/{chunks[1].id}", headers=h).status_code == 404
+    client.delete(f"{base}/{other_doc['id']}", headers=h)
+
     # 空正文不产生切分块
     empty = client.post(base, headers=h, json={"title": "空文档"}).json()["data"]
     assert chunks_of(empty["id"]) == []
 
-    # 编辑后整篇重新切分，旧块不残留
+    # 编辑文档不删除、不重建切分块，检索结果仍能定位到原片段
+    before = [(c.id, c.content) for c in chunks_of(doc["id"])]
     client.put(f"{base}/{doc['id']}", headers=h, json={"title": "手册", "content": "<p>新正文</p>"})
-    assert [(c.chunk_index, c.heading_path, c.content) for c in chunks_of(doc["id"])] == [(0, [], "新正文")]
+    assert [(c.id, c.content) for c in chunks_of(doc["id"])] == before
+    assert client.get(url, headers=h).status_code == 200
+    client.put(f"{base}/{empty['id']}", headers=h, json={"title": "空文档", "content": "<p>有内容了</p>"})
+    assert chunks_of(empty["id"]) == []
 
     # 删除文档 / 知识库时一并删除切分块
     client.delete(f"{base}/{doc['id']}", headers=h)
     assert chunks_of(doc["id"]) == []
-    client.put(f"{base}/{empty['id']}", headers=h, json={"title": "空文档", "content": "<p>有内容了</p>"})
-    assert len(chunks_of(empty["id"])) == 1
+    kept = client.post(base, headers=h, json={"title": "保留", "content": "<p>正文</p>"}).json()["data"]
+    assert len(chunks_of(kept["id"])) == 1
     assert client.delete(f"/api/knowledge-bases/{kb_id}", headers=h).status_code == 200
-    assert chunks_of(empty["id"]) == []
+    assert chunks_of(kept["id"]) == []

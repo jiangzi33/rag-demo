@@ -15,6 +15,12 @@ BASE_COLUMN_LIST = "id, doc_id, kb_id, chunk_index, heading_path, content, creat
 
 # ==================== 查询 select ====================
 
+def select_by_id(conn: Connection, id: int) -> DocumentChunk | None:
+    sql = f"SELECT {BASE_COLUMN_LIST} FROM document_chunks WHERE id = :id"
+    row = conn.execute(text(sql), {"id": id}).mappings().first()
+    return DocumentChunk(**row) if row else None
+
+
 def select_by_doc_id(conn: Connection, doc_id: int) -> list[DocumentChunk]:
     sql = f"SELECT {BASE_COLUMN_LIST} FROM document_chunks WHERE doc_id = :doc_id ORDER BY chunk_index"
     return [DocumentChunk(**row) for row in conn.execute(text(sql), {"doc_id": doc_id}).mappings().all()]

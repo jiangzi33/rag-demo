@@ -12,6 +12,7 @@ from app.mapper import document_mapper
 from app.mapper import knowledge_base_mapper as kb_mapper
 from app.mapper import invite_link_mapper, permission_mapper, user_mapper
 from app.models.document import Document
+from app.models.document_chunk import DocumentChunk
 from app.models.permission import TargetType
 from app.models.user import User
 from app.schemas.document import DocumentBriefOut, DocumentIn, DocumentOut
@@ -39,6 +40,15 @@ def to_out(conn: Connection, user: User, doc: Document, level: Level) -> Documen
 
 def get_readable(conn: Connection, user: User, kb_id: int, doc_id: int) -> tuple[Document, Level]:
     return access.require_doc(conn, user, kb_id, doc_id, Level.READ)
+
+
+def get_chunk(conn: Connection, user: User, kb_id: int, doc_id: int, chunk_id: int) -> DocumentChunk:
+    """读取文档的一个切分块（需要文档读权限）。文档编辑后切分块会整篇重建、id 改变，旧 id 返回 404。"""
+    doc, _ = access.require_doc(conn, user, kb_id, doc_id, Level.READ)
+    chunk = chunk_mapper.select_by_id(conn, chunk_id)
+    if not chunk or chunk.doc_id != doc.id:
+        raise BizError("片段不存在，文档可能已被编辑", ErrorCode.NOT_FOUND, 404)
+    return chunk
 
 
 def list_by_kb(
@@ -79,7 +89,6 @@ def update(conn: Connection, user: User, kb_id: int, doc_id: int, data: Document
         return doc, lvl  # 内容没变，不刷新最近编辑日期
     document_mapper.update_content(conn, doc.id, data.title, data.content)
     doc = document_mapper.select_by_id(conn, doc.id)
-    chunk_service.rebuild(conn, doc)  # 标题也参与切分块的上下文，所以只改标题也要重新切分
     kb_mapper.touch(conn, kb_id)
     conn.commit()
     return doc, lvl

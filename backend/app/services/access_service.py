@@ -106,3 +106,16 @@ def can_write_in_kb(conn: Connection, user: User, kb_id: int) -> bool:
     return lvl >= Level.WRITE or permission_mapper.exists_accepted_doc_in_kb(
         conn, user.id, kb.id, [PermissionType.WRITE, PermissionType.MANAGE]
     )
+
+
+def readable_scope(conn: Connection, user: User, kb_ids: list[int]) -> tuple[list[int], list[int]]:
+    """用户在这些知识库中能读到的范围（RAG 检索用）：
+    返回 (整库可读的知识库 id, 额外可读的单篇文档 id)。知识库不存在时 404。"""
+    full_kb_ids, doc_ids = [], []
+    for kb_id in dict.fromkeys(kb_ids):  # 去重并保持顺序
+        kb, lvl = require_kb(conn, user, kb_id, Level.NONE)
+        if lvl >= Level.READ:
+            full_kb_ids.append(kb.id)
+        else:
+            doc_ids.extend(permission_mapper.select_accepted_doc_ids_in_kb(conn, user.id, kb.id))
+    return full_kb_ids, doc_ids
