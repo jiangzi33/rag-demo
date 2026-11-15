@@ -22,3 +22,4 @@ class SearchResultOut(BaseModel):
     heading: str  # 章节标题路径，如 "安装 > Linux"
     content: str
     score: float  # 余弦相似度，越大越相关
+    keyword_score: float | None = None  # BM25 得分；None 表示没有命中关键词，只是语义相近

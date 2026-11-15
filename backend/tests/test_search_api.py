@@ -51,8 +51,9 @@ def test_search_api(client, monkeypatch):
     assert r.json()["data"] == [{
         "chunk_id": 1, "doc_id": doc, "doc_title": "部署手册", "kb_id": kb, "chunk_index": 0,
         "heading": "安装 > Linux", "content": "执行 ./install.sh", "score": 0.69,
+        "keyword_score": None,
     }]
-    assert store.searches[0]["top_k"] == 3
+    assert store.searches[0]["top_k"] == settings.RAG_HYBRID_CANDIDATES
 
     assert client.post("/api/search", headers=h, json={**body, "kb_ids": []}).status_code == 422
     r = client.post("/api/search", headers=h, json={**body, "query": "   "})

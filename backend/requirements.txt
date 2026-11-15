@@ -11,5 +11,6 @@ python-multipart>=0.0.9
 nh3>=0.2.17
 httpx>=0.27  # 调用向量化接口
 pymilvus>=2.5  # 向量数据库
+jieba>=0.42  # Milvus Lite 关键词检索的中文分词（需装在运行 Milvus Lite 的环境中）
 # 测试
 pytest

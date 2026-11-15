@@ -37,11 +37,12 @@ class FakeEmbedder(Embedder):
 
 
 class FakeStore:
-    """模拟 Milvus：按 kb_ids / doc_ids 过滤预置的命中结果，再取前 top_k。"""
+    """模拟 Milvus：按 kb_ids / doc_ids 过滤预置的命中结果，再取前 top_k。keyword_hits 为关键词检索的结果。"""
 
-    def __init__(self, dim=3, hits=(), fail=None):
-        self.dim, self.hits, self.fail = dim, list(hits), fail
+    def __init__(self, dim=3, hits=(), fail=None, keyword_hits=()):
+        self.dim, self.hits, self.fail, self.keyword_hits = dim, list(hits), fail, list(keyword_hits)
         self.searches: list[dict] = []
+        self.keyword_searches: list[dict] = []
 
     def dimension(self):
         if self.fail == "dimension":
@@ -52,7 +53,15 @@ class FakeStore:
         if self.fail == "search":
             raise ConnectionError("milvus down")
         self.searches.append({"kb_ids": kb_ids, "doc_ids": doc_ids, "top_k": top_k})
-        allowed = [h for h in self.hits if h.kb_id in (kb_ids or []) or h.doc_id in (doc_ids or [])]
+        return self._filter(self.hits, kb_ids, doc_ids, top_k)
+
+    def keyword_search(self, text, kb_ids, top_k=5, doc_ids=None):
+        self.keyword_searches.append({"text": text, "kb_ids": kb_ids, "doc_ids": doc_ids, "top_k": top_k})
+        return self._filter(self.keyword_hits, kb_ids, doc_ids, top_k)
+
+    @staticmethod
+    def _filter(hits, kb_ids, doc_ids, top_k):
+        allowed = [h for h in hits if h.kb_id in (kb_ids or []) or h.doc_id in (doc_ids or [])]
         return sorted(allowed, key=lambda h: -h.score)[:top_k]
 
 
@@ -126,11 +135,16 @@ def test_owner_gets_top_k_with_titles(world, conn):
     chunks = retriever.retrieve(conn, world["users"]["retrowner"], " Linux\n怎么安装？", kb_ids=[world["kb"]], top_k=3)
 
     assert embedder.queries == ["Linux 怎么安装？"]
-    assert store.searches == [{"kb_ids": [world["kb"]], "doc_ids": [], "top_k": 3}]
-    # 已删除文档的残留向量被丢弃；按相似度排序并带上文档标题
+    # 两路各取 RAG_HYBRID_CANDIDATES 个候选；关键词检索去掉标点
+    assert store.searches == [{"kb_ids": [world["kb"]], "doc_ids": [], "top_k": settings.RAG_HYBRID_CANDIDATES}]
+    assert store.keyword_searches == [
+        {"text": "Linux 怎么安装", "kb_ids": [world["kb"]], "doc_ids": [], "top_k": settings.RAG_HYBRID_CANDIDATES}
+    ]
+    # 已删除文档的残留向量被丢弃（多取了候选，结果数不会因此变少）；按相似度排序并带上文档标题
     assert [(c.chunk_id, c.doc_title, c.heading, c.score) for c in chunks] == [
         (1, "部署手册", "安装 > Linux", 0.69),
         (2, "部署手册", "安装 > Windows", 0.57),
+        (3, "报销制度", "差旅", 0.15),
     ]
 
 
@@ -138,6 +152,7 @@ def test_doc_grant_only_searches_granted_docs(world, conn):
     store = FakeStore(hits=hits_for(world))
     chunks = Retriever(FakeEmbedder(), store).retrieve(conn, world["users"]["retrreader"], "报销标准", [world["kb"]])
     assert store.searches[0]["kb_ids"] == [] and store.searches[0]["doc_ids"] == [world["docs"][0]]
+    assert store.keyword_searches[0]["kb_ids"] == [] and store.keyword_searches[0]["doc_ids"] == [world["docs"][0]]
     assert {c.doc_id for c in chunks} == {world["docs"][0]}  # 看不到无权限的《报销制度》
 
 
@@ -151,10 +166,63 @@ def test_min_score_and_default_top_k(world, conn, monkeypatch):
     monkeypatch.setattr(settings, "RAG_TOP_K", 1)
     store = FakeStore(hits=hits_for(world)[:3])  # 不含已删除文档的残留向量
     chunks = Retriever(FakeEmbedder(), store, min_score=0.6).retrieve(conn, world["users"]["retrowner"], "q", [world["kb"]])
-    assert store.searches[0]["top_k"] == 1 and [c.chunk_id for c in chunks] == [1]
+    assert [c.chunk_id for c in chunks] == [1]
     store = FakeStore(hits=hits_for(world))
     chunks = Retriever(FakeEmbedder(), store, min_score=0.6).retrieve(conn, world["users"]["retrowner"], "q", [world["kb"]], 5)
     assert [c.chunk_id for c in chunks] == [1]  # 0.57 / 0.15 低于下限
+
+
+def test_hybrid_keyword_hits_are_fused(world, conn, monkeypatch):
+    """术语只靠语义检索排不上来时，关键词检索把它补进结果，两路都命中的排最前。"""
+    kb, (d1, d2, _) = world["kb"], world["docs"]
+    semantic = hits_for(world)[:3]  # 1: 0.69, 2: 0.57, 3: 0.15
+    keyword = [
+        SearchHit(3, d2, kb, 0, "差旅", "住宿每晚不超过 500 元", 7.5),
+        SearchHit(5, d1, kb, 2, "错误码", "E1024 表示磁盘已满", 6.0, vector=[0.3, 0.9, 0.0]),  # 只命中关键词
+    ]
+    store = FakeStore(hits=semantic, keyword_hits=keyword)
+    chunks = Retriever(FakeEmbedder(), store, min_score=0.5).retrieve(conn, world["users"]["retrowner"], "E1024", [kb], 4)
+    # RRF：3 两路都命中（语义第 3 + 关键词第 1）排第一；5 只命中关键词，余弦相似度 0.3 低于下限也保留
+    assert [(c.chunk_id, c.keyword_score) for c in chunks] == [(3, 7.5), (1, None), (2, None), (5, 6.0)]
+    assert chunks[3].score == pytest.approx(0.3) and chunks[3].doc_title == "部署手册"
+
+    # 只用语义检索：不调用关键词检索，候选数即 top_k，低于下限的被丢弃
+    monkeypatch.setattr(settings, "RAG_SEARCH_MODE", "vector")
+    store = FakeStore(hits=semantic, keyword_hits=keyword)
+    chunks = Retriever(FakeEmbedder(), store, min_score=0.5).retrieve(conn, world["users"]["retrowner"], "E1024", [kb], 4)
+    assert [c.chunk_id for c in chunks] == [1, 2] and store.keyword_searches == [] and store.searches[0]["top_k"] == 4
+
+
+def test_results_are_logged(world, conn, monkeypatch, caplog):
+    import logging
+
+    kb, (d1, d2, _) = world["kb"], world["docs"]
+    keyword = [SearchHit(3, d2, kb, 0, "差旅", "住宿每晚不超过 500 元", 7.5)]
+    store = FakeStore(hits=hits_for(world), keyword_hits=keyword)
+    monkeypatch.setattr(settings, "RAG_LOG_CONTENT_CHARS", 6)
+    with caplog.at_level(logging.INFO, logger="app.services.retrieval_service"):
+        Retriever(FakeEmbedder(), store, min_score=0.5).retrieve(conn, world["users"]["retrowner"], "住宿 标准？", [kb], 2)
+    log = caplog.records[-1].getMessage()
+    assert 'mode=hybrid top_k=2 query="住宿 标准？"' in log
+    assert "候选 语义 4 / 关键词 1 → 返回 2 条" in log
+    assert "#1 chunk=3" in log and "《报销制度》 > 差旅 | 相似度 0.150 BM25 7.50 | 语义#4 关键词#1 | 住宿每晚不超…" in log
+    assert "#2 chunk=1" in log and "相似度 0.690 | 语义#2 关键词#-" in log
+
+    caplog.clear()
+    monkeypatch.setattr(settings, "RAG_LOG_RESULTS", False)
+    with caplog.at_level(logging.INFO, logger="app.services.retrieval_service"):
+        Retriever(FakeEmbedder(), store).retrieve(conn, world["users"]["retrowner"], "q", [kb], 2)
+    assert caplog.records == []
+
+
+def test_fuse_weights(monkeypatch):
+    from app.services.retrieval_service import fuse
+
+    a, b = SearchHit(1, 1, 1, 0, "", "a", 0.9), SearchHit(2, 1, 1, 1, "", "b", 5.0, vector=[1.0, 0, 0])
+    assert [c.chunk_id for c in fuse([a], [b], [1.0, 0, 0])] == [1, 2]  # 同为第 1 名，得分相同时语义检索在前
+    monkeypatch.setattr(settings, "RAG_KEYWORD_WEIGHT", 2.0)
+    fused = fuse([a], [b], [1.0, 0, 0])
+    assert [c.chunk_id for c in fused] == [2, 1] and fused[0].score == pytest.approx(1.0)
 
 
 def test_invalid_params(world, conn, monkeypatch):

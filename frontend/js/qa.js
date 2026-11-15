@@ -96,6 +96,7 @@ const QaPage = {
               <a v-for="(s, n) in m.sources" :key="s.chunk_id" :href="sourceLink(s)" class="qa-source">
                 <span class="qa-source-no">{{ n + 1 }}</span>
                 <span class="qa-source-title">{{ s.doc_title }}<template v-if="s.heading"> › {{ s.heading.split(' > ').join(' › ') }}</template></span>
+                <span v-if="s.keyword_score != null" class="kw-tag" title="片段中包含问题的关键词">关键词</span>
                 <span class="muted">{{ (s.score * 100).toFixed(0) }}%</span>
               </a>
             </div>

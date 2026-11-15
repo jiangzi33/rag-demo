@@ -37,7 +37,7 @@ const SearchPage = {
         <router-link :to="{ path: '/kb/' + r.kb_id + '/docs/' + r.doc_id, query: { chunk: r.chunk_id } }" class="search-item-title">{{ itemTitle(r) }}</router-link>
         <div class="search-snippet" :class="{ expanded: expanded[r.chunk_id] }" :title="expanded[r.chunk_id] ? '' : '点击展开全文'"
              @click="expanded[r.chunk_id] = !expanded[r.chunk_id]">{{ r.content }}</div>
-        <div class="muted search-meta">相关度 {{ (r.score * 100).toFixed(1) }}%</div>
+        <div class="muted search-meta">相关度 {{ (r.score * 100).toFixed(1) }}%<span v-if="r.keyword_score != null" class="kw-tag" title="片段中包含检索内容的关键词">关键词匹配</span></div>
       </div>
     </div>
   </div>`,

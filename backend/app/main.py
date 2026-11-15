@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, FastAPI, Request
@@ -16,6 +17,17 @@ async def lifespan(_: FastAPI):
     yield
 
 
+def setup_logging() -> None:
+    """应用自己的日志（logger 名以 app. 开头）输出到控制台。uvicorn 只配置了它自己的 logger，不配置的话 INFO 日志不会显示。"""
+    logger = logging.getLogger("app")
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+        logger.addHandler(handler)
+    logger.setLevel(settings.LOG_LEVEL.upper())
+
+
+setup_logging()
 app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
 register_exception_handlers(app)
 

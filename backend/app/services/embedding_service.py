@@ -77,6 +77,7 @@ def save_vectors(doc: Document, items: list[ChunkVector]) -> None:
             heading=" > ".join(i.chunk.heading_path),
             content=i.chunk.content,
             vector=i.vector,
+            text=i.text,  # 关键词检索也带上文档标题和章节标题
         )
         for i in items
     ]

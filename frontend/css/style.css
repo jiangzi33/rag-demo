@@ -163,6 +163,9 @@ a { color: #00b96b; text-decoration: none; }
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
 .search-snippet.expanded { display: block; cursor: auto; }
 .search-meta { margin-top: 4px; }
+/* 混合检索中命中关键词（BM25）的结果 */
+.kw-tag { display: inline-block; margin-left: 8px; padding: 0 6px; border-radius: 4px; font-size: 12px; line-height: 18px;
+  color: #00b96b; background: #e8f7f0; flex: none; }
 @media (max-width: 600px) {
   .search-home { padding-top: 6vh; }
   .search-kb-select { flex: 1; width: auto; min-width: 0; }

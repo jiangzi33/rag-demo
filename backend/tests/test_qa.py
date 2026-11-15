@@ -176,7 +176,7 @@ def test_chat_streams_sources_and_answer(client, setup, monkeypatch):
     assert ev[0]["sources"][0]["doc_title"] == "部署手册"
     assert [e["text"] for e in ev[1:-1]] == ["安装请执行", " ./install.sh [1]"]
     assert ev[-1] == {"type": "done"}
-    assert store.searches[0]["top_k"] == settings.QA_TOP_K
+    assert store.searches[0]["top_k"] == max(settings.QA_TOP_K, settings.RAG_HYBRID_CANDIDATES)
     # 历史对话传给大模型，问题去掉首尾空白
     messages = chat.calls[0]
     assert [m["role"] for m in messages] == ["system", "user", "assistant", "user"]
