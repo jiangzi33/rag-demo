@@ -26,6 +26,29 @@ def select_by_doc_id(conn: Connection, doc_id: int) -> list[DocumentChunk]:
     return [DocumentChunk(**row) for row in conn.execute(text(sql), {"doc_id": doc_id}).mappings().all()]
 
 
+def _in_clause(prefix: str, values: list[int]) -> tuple[str, dict]:
+    params = {f"{prefix}{i}": v for i, v in enumerate(values)}
+    return ", ".join(f":{k}" for k in params), params
+
+
+def select_by_ids(conn: Connection, ids: list[int]) -> list[DocumentChunk]:
+    if not ids:
+        return []
+    placeholders, params = _in_clause("id", ids)
+    sql = f"SELECT {BASE_COLUMN_LIST} FROM document_chunks WHERE id IN ({placeholders})"
+    return [DocumentChunk(**row) for row in conn.execute(text(sql), params).mappings().all()]
+
+
+def select_all(conn: Connection, kb_ids: list[int] | None = None) -> list[DocumentChunk]:
+    """全部切分块（检索评测集抽样用），kb_ids 不为空时只取这些知识库。"""
+    if kb_ids:
+        placeholders, params = _in_clause("kb", kb_ids)
+        sql = f"SELECT {BASE_COLUMN_LIST} FROM document_chunks WHERE kb_id IN ({placeholders}) ORDER BY id"
+    else:
+        sql, params = f"SELECT {BASE_COLUMN_LIST} FROM document_chunks ORDER BY id", {}
+    return [DocumentChunk(**row) for row in conn.execute(text(sql), params).mappings().all()]
+
+
 # ==================== 新增 insert ====================
 
 def insert_batch(conn: Connection, chunks: list[Chunk]) -> int:
