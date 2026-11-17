@@ -40,11 +40,30 @@ class OpenAIChatClient:
             base_url=base_url.rstrip("/"), headers={"Authorization": f"Bearer {api_key}"}, timeout=timeout
         )
 
-    def stream(self, messages: list[dict]) -> Iterator[str]:
-        """流式生成，逐段返回新增的文字。"""
-        payload = {"model": self.model, "messages": messages, "stream": True}
+    def _payload(self, messages: list[dict], model: str | None = None, **extra) -> dict:
+        payload = {"model": model or self.model, "messages": messages, **extra}
         if self.temperature is not None:
             payload["temperature"] = self.temperature
+        return payload
+
+    def complete(self, messages: list[dict], model: str | None = None, timeout: float | None = None) -> str:
+        """非流式生成，返回完整的回答文字。model / timeout 不填使用客户端的配置。"""
+        try:
+            r = self._client.post(
+                "/chat/completions", json=self._payload(messages, model), timeout=timeout or httpx.USE_CLIENT_DEFAULT
+            )
+        except httpx.HTTPError as e:
+            raise ChatError(f"大模型接口请求失败：{e}") from e
+        if r.status_code != 200:
+            raise ChatError(f"大模型接口返回 {r.status_code}：{_error_message(r)}")
+        try:
+            return r.json()["choices"][0]["message"]["content"] or ""
+        except (ValueError, KeyError, IndexError, TypeError) as e:
+            raise ChatError(f"大模型返回格式错误：{r.text[:300]}") from e
+
+    def stream(self, messages: list[dict]) -> Iterator[str]:
+        """流式生成，逐段返回新增的文字。"""
+        payload = self._payload(messages, stream=True)
         try:
             with self._client.stream("POST", "/chat/completions", json=payload) as r:
                 if r.status_code != 200:

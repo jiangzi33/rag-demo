@@ -4,25 +4,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="880ec66c-824a-4c13-b694-e09c51d987e0" name="Changes" comment="compelete rag ai question">
+    <list default="true" id="880ec66c-824a-4c13-b694-e09c51d987e0" name="Changes" comment="compelete rag all">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/api/qa.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/qa.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/core/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/core/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/rag/llm.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/rag/llm.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/rag/vector_store.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/rag/vector_store.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/schemas/search.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas/search.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/embedding_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/embedding_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/services/qa_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/qa_service.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/services/retrieval_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/retrieval_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/backend/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/tests/conftest.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tests/conftest.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/tests/test_qa.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tests/test_qa.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/tests/test_retrieval_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tests/test_retrieval_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/tests/test_search_api.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tests/test_search_api.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/tests/test_vector_store.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tests/test_vector_store.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/uploads/doc-images/1/59641bf73cf140ee9a28ea5ff78aba13.jpg" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/css/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/css/style.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/js/qa.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/qa.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/js/search.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/search.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -30,7 +22,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="75" />
+    <option name="cachedIndexableFilesCount" value="103" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -54,61 +46,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0000000003730272" />
-      <entry key="MS500" value="1.013036075008891" />
-      <entry key="S2" value="1.4603386628620876" />
-      <entry key="S5" value="2.45182426443745" />
-      <entry key="S10" value="3.347273202989638" />
-      <entry key="S30" value="4.329749024083579" />
-      <entry key="S60" value="4.646964832429925" />
-      <entry key="M2" value="4.818741813279994" />
-      <entry key="M5" value="4.926325464860387" />
-      <entry key="M10" value="4.9760864295424305" />
-      <entry key="M15" value="5.247433715404454" />
-      <entry key="M30" value="10.996761929038868" />
-      <entry key="H1" value="33.890264802636345" />
-      <entry key="H2" value="68.71640764947314" />
-      <entry key="H4" value="99.85224425709363" />
-      <entry key="D1" value="149.13287978498735" />
-      <entry key="W1" value="213.82736549871134" />
+      <entry key="MS100" value="1.2087719799349699" />
+      <entry key="MS500" value="1.740558469482342" />
+      <entry key="S2" value="2.3503215351582343" />
+      <entry key="S5" value="3.3761988584915903" />
+      <entry key="S10" value="4.295246313395678" />
+      <entry key="S30" value="5.307199261059789" />
+      <entry key="S60" value="5.634848108326925" />
+      <entry key="M2" value="5.812455400814709" />
+      <entry key="M5" value="5.923753752671869" />
+      <entry key="M10" value="5.974787415421607" />
+      <entry key="M15" value="6.2465204425341625" />
+      <entry key="M30" value="11.995804939213842" />
+      <entry key="H1" value="34.888790125616254" />
+      <entry key="H2" value="69.71491259462144" />
+      <entry key="H4" value="100.85115801438002" />
+      <entry key="D1" value="150.1326093934044" />
+      <entry key="W1" value="214.82731011458026" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
       <entry key="MS500" value="0.0" />
       <entry key="S2" value="0.0" />
       <entry key="S5" value="0.0" />
-      <entry key="S10" value="1.1264182030110173E-202" />
-      <entry key="S30" value="7.645519517148357E-68" />
-      <entry key="S60" value="3.942698298959836E-34" />
-      <entry key="M2" value="3.116387176874428E-17" />
-      <entry key="M5" value="6.062771566725242E-7" />
-      <entry key="M10" value="0.0020762092761797734" />
-      <entry key="M15" value="0.03334847890938559" />
-      <entry key="M30" value="0.5612485438451246" />
-      <entry key="H1" value="2.3507957963514516" />
-      <entry key="H2" value="4.838977688133392" />
-      <entry key="H4" value="6.96630968916533" />
-      <entry key="D1" value="9.900748626189653" />
-      <entry key="W1" value="10.81662219478728" />
+      <entry key="S10" value="1.1089102101073194E-202" />
+      <entry key="S30" value="7.605700892016396E-68" />
+      <entry key="S60" value="3.9324179139703755E-34" />
+      <entry key="M2" value="3.1123216145441603E-17" />
+      <entry key="M5" value="6.059606590386273E-7" />
+      <entry key="M10" value="0.0020756672789283732" />
+      <entry key="M15" value="0.033342674879700746" />
+      <entry key="M30" value="0.561199701363198" />
+      <entry key="H1" value="2.3506935054853284" />
+      <entry key="H2" value="4.838872407061267" />
+      <entry key="H4" value="6.9662339061601815" />
+      <entry key="D1" value="9.900730675224734" />
+      <entry key="W1" value="10.816619393138295" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.9138314505823057" />
-      <entry key="MS500" value="0.9950319870132173" />
-      <entry key="S2" value="1.4546693441450296" />
-      <entry key="S5" value="2.44867329543163" />
-      <entry key="S10" value="3.345319637981112" />
-      <entry key="S30" value="4.32896241005741" />
-      <entry key="S60" value="4.64654986180211" />
-      <entry key="M2" value="4.818528478254627" />
-      <entry key="M5" value="4.926239265090623" />
-      <entry key="M10" value="4.978099489082603" />
-      <entry key="M15" value="5.280517794257104" />
-      <entry key="M30" value="11.555732529868042" />
-      <entry key="H1" value="36.23596263528234" />
-      <entry key="H2" value="73.54994811793443" />
-      <entry key="H4" value="106.81457483406031" />
-      <entry key="D1" value="159.03270199933772" />
-      <entry key="W1" value="224.64383969571318" />
+      <entry key="MS100" value="0.39955438105083896" />
+      <entry key="MS500" value="1.4584256882044964" />
+      <entry key="S2" value="2.269742602442348" />
+      <entry key="S5" value="3.3423005338415974" />
+      <entry key="S10" value="4.277780046395402" />
+      <entry key="S30" value="5.301208644460126" />
+      <entry key="S60" value="5.631826770649834" />
+      <entry key="M2" value="5.810937768610357" />
+      <entry key="M5" value="5.923145563332828" />
+      <entry key="M10" value="5.97653889809168" />
+      <entry key="M15" value="6.279424721562152" />
+      <entry key="M30" value="12.55463987110591" />
+      <entry key="H1" value="37.23434237593237" />
+      <entry key="H2" value="74.5483261434244" />
+      <entry key="H4" value="107.81340197312757" />
+      <entry key="D1" value="160.03241184537785" />
+      <entry key="W1" value="225.64378125095814" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -294,7 +286,23 @@
       <option name="project" value="LOCAL" />
       <updated>1794319613791</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="compelete rag all">
+      <option name="closed" value="true" />
+      <created>1794730302463</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1794730302463</updated>
+    </task>
+    <task id="LOCAL-00014" summary="compelete rag all">
+      <option name="closed" value="true" />
+      <created>1794730327484</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1794730327484</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -321,7 +329,8 @@
     <MESSAGE value="first version: embedding tools" />
     <MESSAGE value="first version: RAG knowledge_bases embedding chunking saving into vector store" />
     <MESSAGE value="compelete rag ai question" />
-    <option name="LAST_COMMIT_MESSAGE" value="compelete rag ai question" />
+    <MESSAGE value="compelete rag all" />
+    <option name="LAST_COMMIT_MESSAGE" value="compelete rag all" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

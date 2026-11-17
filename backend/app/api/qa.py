@@ -21,9 +21,9 @@ def chat(body: ChatIn, user: User = Depends(get_current_user), db: Connection = 
     except ChatError as e:
         raise BizError(f"智能问答暂不可用：{e}", ErrorCode.LLM_UNAVAILABLE, 503)
     history = [m.model_dump() for m in body.history]
-    sources = qa_service.retrieve(db, user, body.question, body.kb_ids, history, body.top_k)
+    sources, rewritten = qa_service.retrieve(db, user, body.question, body.kb_ids, history, body.top_k, client=client)
     return StreamingResponse(
-        qa_service.stream_answer(client, body.question.strip(), history, sources),
+        qa_service.stream_answer(client, body.question.strip(), history, sources, rewritten and rewritten.query),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},  # 关闭反向代理缓冲，逐字输出
     )

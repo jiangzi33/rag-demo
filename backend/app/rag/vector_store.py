@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 
 from pymilvus import DataType, Function, FunctionType, MilvusClient
+from pymilvus.exceptions import MilvusException
 
 from app.core.config import settings
 
@@ -79,6 +80,7 @@ class MilvusVectorStore:
         self.collection = collection
         self._client = client or MilvusClient(uri=uri, token=token, grpc_options=GRPC_OPTIONS)
         self._ready = False
+        self._loaded = False
         self._dim: int | None = None
         self._keyword: bool | None = None
 
@@ -112,9 +114,7 @@ class MilvusVectorStore:
         scope = self._scope_filter(kb_ids, doc_ids)
         if not scope or not self._exists():
             return []
-        results = self._client.search(
-            self.collection, data=[vector], anns_field="vector", filter=scope, limit=top_k, output_fields=self.OUTPUT_FIELDS
-        )
+        results = self._search(data=[vector], anns_field="vector", filter=scope, limit=top_k, output_fields=self.OUTPUT_FIELDS)
         return [SearchHit(id=hit["id"], score=hit["distance"], **{f: hit["entity"][f] for f in self.OUTPUT_FIELDS})
                 for hit in results[0]]
 
@@ -126,9 +126,8 @@ class MilvusVectorStore:
         scope = self._scope_filter(kb_ids, doc_ids)
         if not scope or not text.strip() or not self.supports_keyword():
             return []
-        results = self._client.search(
-            self.collection, data=[text], anns_field="sparse", filter=scope, limit=top_k,
-            output_fields=[*self.OUTPUT_FIELDS, "vector"],
+        results = self._search(
+            data=[text], anns_field="sparse", filter=scope, limit=top_k, output_fields=[*self.OUTPUT_FIELDS, "vector"]
         )
         # Milvus Lite 返回的 BM25 距离为负数（越小越相关），Milvus 服务端为正数，统一取绝对值
         return [SearchHit(id=hit["id"], score=abs(hit["distance"]), vector=list(hit["entity"]["vector"]),
@@ -143,6 +142,25 @@ class MilvusVectorStore:
         if doc_ids:
             conditions.append(f"doc_id in {[int(d) for d in doc_ids]}")
         return " or ".join(conditions)
+
+    def _search(self, **kwargs):
+        """检索前确保集合已加载到内存。Milvus 重启后集合会变为 released 状态，
+        此时检索报 "call load() before search"，重新加载后重试一次。"""
+        self._ensure_loaded()
+        try:
+            return self._client.search(self.collection, **kwargs)
+        except MilvusException as e:
+            if "released" not in str(e.message) and "not loaded" not in str(e.message):
+                raise
+            logger.warning("Milvus 集合 %s 未加载，重新加载后重试检索", self.collection)
+            self._loaded = False
+            self._ensure_loaded()
+            return self._client.search(self.collection, **kwargs)
+
+    def _ensure_loaded(self) -> None:
+        if not self._loaded:
+            self._client.load_collection(self.collection)
+            self._loaded = True
 
     # ---------- 集合管理 ----------
 
@@ -170,7 +188,7 @@ class MilvusVectorStore:
         """删除整个集合（重建索引用），之后第一次写入时按新结构重新创建。"""
         if self._client.has_collection(self.collection):
             self._client.drop_collection(self.collection)
-        self._ready, self._dim, self._keyword = False, None, None
+        self._ready, self._loaded, self._dim, self._keyword = False, False, None, None
 
     def _exists(self) -> bool:
         return self._ready or self._client.has_collection(self.collection)
@@ -188,7 +206,7 @@ class MilvusVectorStore:
         else:
             self._create_collection(dim)
             logger.info("已创建 Milvus 集合 %s（%d 维）", self.collection, dim)
-        self._client.load_collection(self.collection)
+        self._ensure_loaded()
         self._dim = dim
         self._ready = True
 

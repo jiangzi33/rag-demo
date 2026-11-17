@@ -91,6 +91,9 @@ const QaPage = {
                  v-html="renderAnswer(m.content, m.sources)"></div>
             <el-alert v-if="m.error" :title="m.error" type="error" :closable="false" show-icon class="qa-error" />
             <div v-if="m.status === 'stopped'" class="muted qa-status">已停止生成</div>
+            <div v-if="m.query && !['searching', 'thinking'].includes(m.status)" class="muted qa-rewrite" title="检索前已将问题改写为更清晰的说法">
+              已将问题理解为：{{ m.query }}
+            </div>
             <div v-if="m.sources?.length && !['searching', 'thinking'].includes(m.status)" class="qa-sources">
               <div class="muted qa-sources-title">参考来源</div>
               <a v-for="(s, n) in m.sources" :key="s.chunk_id" :href="sourceLink(s)" class="qa-source">
@@ -147,7 +150,7 @@ const QaPage = {
         .map((m) => ({ role: m.role, content: m.content }))
         .slice(-6)
       qaStore.messages.push({ role: 'user', content: question })
-      qaStore.messages.push({ role: 'assistant', content: '', sources: [], status: 'searching', error: '' })
+      qaStore.messages.push({ role: 'assistant', content: '', sources: [], query: '', status: 'searching', error: '' })
       const answer = qaStore.messages[qaStore.messages.length - 1]
       input.value = ''
       streaming.value = true
@@ -157,6 +160,7 @@ const QaPage = {
         await streamChat({ question, kb_ids: kbIds, history }, controller.signal, (e) => {
           if (e.type === 'sources') {
             answer.sources = e.sources
+            answer.query = e.query || ''
             answer.status = 'thinking'
           } else if (e.type === 'delta') {
             answer.content += e.text

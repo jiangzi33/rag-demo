@@ -90,9 +90,11 @@ class Retriever:
     # ---------- 对外接口 ----------
 
     def retrieve(
-        self, conn: Connection, user: User, question: str, kb_ids: list[int], top_k: int | None = None
+        self, conn: Connection, user: User, question: str, kb_ids: list[int], top_k: int | None = None,
+        keyword_text: str | None = None,
     ) -> list[RetrievedChunk]:
-        """在用户有读权限的范围内，检索与问题最相似的 top_k 个文档片段，按相似度从高到低排序。"""
+        """在用户有读权限的范围内，检索与问题最相似的 top_k 个文档片段，按相似度从高到低排序。
+        keyword_text：关键词检索使用的文本（如问题改写后附加的同义词），不填使用 question。"""
         if not settings.EMBEDDING_ENABLED:
             raise _unavailable("未开启向量化（EMBEDDING_ENABLED）")
         q = normalize_question(question)
@@ -115,7 +117,7 @@ class Retriever:
         n = max(k, settings.RAG_HYBRID_CANDIDATES) if hybrid else k
         try:
             semantic = self.store.search(vector, kb_ids=full_kb_ids, doc_ids=doc_ids, top_k=n)
-            keyword = self.store.keyword_search(keyword_query(q), kb_ids=full_kb_ids, doc_ids=doc_ids, top_k=n) if hybrid else []
+            keyword = self.store.keyword_search(keyword_query(keyword_text or q), kb_ids=full_kb_ids, doc_ids=doc_ids, top_k=n) if hybrid else []
         except Exception:
             logger.exception("Milvus 检索失败")
             raise _unavailable("向量数据库检索失败")
@@ -139,7 +141,7 @@ class Retriever:
 
         if settings.RAG_LOG_RESULTS:
             _log_results(
-                user, q, full_kb_ids, doc_ids, k, semantic, keyword, result, below_min,
+                user, q, keyword_text, full_kb_ids, doc_ids, k, semantic, keyword, result, below_min,
                 {"向量化": embedded - started, "检索": searched - embedded, "总计": time.perf_counter() - started},
             )
         return result
@@ -167,7 +169,7 @@ class Retriever:
 
 
 def _log_results(
-    user: User, query: str, kb_ids: list[int], doc_ids: list[int], top_k: int,
+    user: User, query: str, keyword_text: str | None, kb_ids: list[int], doc_ids: list[int], top_k: int,
     semantic: list[SearchHit], keyword: list[SearchHit], result: list[RetrievedChunk],
     below_min: int, timings: dict[str, float],
 ) -> None:
@@ -181,7 +183,8 @@ def _log_results(
     extra = f"，{below_min} 条低于相似度下限被丢弃" if below_min else ""
     lines = [
         f'检索 user={user.id} mode={settings.RAG_SEARCH_MODE} top_k={top_k} query="{query}" '
-        f"范围 知识库{kb_ids} 文档{doc_ids}",
+        + (f'keyword_text="{keyword_text}" ' if keyword_text else "")
+        + f"范围 知识库{kb_ids} 文档{doc_ids}",
         f"    候选 语义 {len(semantic)} / 关键词 {len(keyword)} → 返回 {len(result)} 条{extra} | "
         + " ".join(f"{name} {seconds * 1000:.0f}ms" for name, seconds in timings.items()),
     ]

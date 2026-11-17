@@ -216,6 +216,7 @@ a { color: #00b96b; text-decoration: none; }
 .qa-error { margin-top: 8px; }
 .qa-sources { margin-top: 12px; padding-top: 10px; border-top: 1px dashed #e4e7e6; }
 .qa-sources-title { margin-bottom: 6px; }
+.qa-rewrite { margin-top: 10px; font-size: 12px; }
 .qa-source { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 6px; font-size: 13px; color: #4d5156; }
 .qa-source:hover { background: #f4f6f5; }
 .qa-source-no { flex: none; width: 18px; height: 18px; border-radius: 50%; background: #e8f7f0; color: #00b96b;
