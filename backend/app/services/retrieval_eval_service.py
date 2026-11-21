@@ -59,6 +59,9 @@ class EvalCase:
     history: list[dict] = field(default_factory=list)
     source: str = "manual"  # manual：人工标注；generated：大模型针对片段出题
     judged: bool = False  # 是否已用大模型判定补全相关片段
+    # 生成评估用（见 generation_eval_service）：根据相关片段写出的参考答案和回答必须包含的要点
+    reference_answer: str = ""
+    key_points: list[str] = field(default_factory=list)
 
 
 @dataclass

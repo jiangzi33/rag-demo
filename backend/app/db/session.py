@@ -38,7 +38,7 @@ def init_db() -> None:
                 raise RuntimeError(f"{table} 表不存在，请先执行: mysql -uroot -p < sql/init.sql") from e
         if not is_sqlite:
             _upgrade_permission_unique_key(conn)
-            for table in ("notifications", "invite_links", "document_chunks"):
+            for table in ("notifications", "invite_links", "document_chunks", "document_summaries"):
                 _create_table_if_missing(conn, table)
 
 

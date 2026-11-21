@@ -23,8 +23,9 @@ const readSse = async (response, onEvent) => {
 }
 
 // 流式接口不走 axios（浏览器中的 axios 不支持逐块读取响应），登录态和错误处理与 http 拦截器保持一致
-const streamChat = async (data, signal, onEvent) => {
-  const res = await fetch('/api/qa/chat', {
+// 问答和文档摘要（docs.js）共用
+const streamSse = async (path, data, signal, onEvent) => {
+  const res = await fetch(`/api${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
     body: JSON.stringify(data),
@@ -41,8 +42,10 @@ const streamChat = async (data, signal, onEvent) => {
   }
   await readSse(res, onEvent)
 }
+const streamChat = (data, signal, onEvent) => streamSse('/qa/chat', data, signal, onEvent)
 
-const sourceLink = (s) => `#/kb/${s.kb_id}/docs/${s.doc_id}?chunk=${s.chunk_id}`
+// 片段没有 id（文档摘要基于未重建的正文临时切分）时只跳转到文档
+const sourceLink = (s) => `#/kb/${s.kb_id}/docs/${s.doc_id}${s.chunk_id ? `?chunk=${s.chunk_id}` : ''}`
 
 // 回答渲染为 Markdown；[1]、[1, 2]、[1][2] 中的序号替换为跳转到对应片段的链接，不存在的序号原样保留
 const renderAnswer = (text, sources) => {

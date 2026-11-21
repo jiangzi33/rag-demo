@@ -130,3 +130,24 @@ CREATE TABLE IF NOT EXISTS document_chunks
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci COMMENT ='文档切分块表（RAG 检索用，文档新建 / 编辑时重新生成）';
+
+CREATE TABLE IF NOT EXISTS document_summaries
+(
+    id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    doc_id       BIGINT UNSIGNED NOT NULL COMMENT '所属文档，关联 documents.id',
+    kb_id        BIGINT UNSIGNED NOT NULL COMMENT '所属知识库（冗余，删除知识库时级联删除），关联 knowledge_bases.id',
+    focus        VARCHAR(200)    NOT NULL DEFAULT '' COMMENT '关注点，空字符串为全文摘要',
+    fingerprint  CHAR(64)        NOT NULL COMMENT '生成时文档标题、正文和切分块 id 的 SHA-256，不一致说明文档已变化，摘要失效',
+    mode         VARCHAR(16)     NOT NULL COMMENT '摘要方式：full / map_reduce / focus',
+    stale        TINYINT         NOT NULL DEFAULT 0 COMMENT '是否基于临时切分（切分块未重建）',
+    truncated    TINYINT         NOT NULL DEFAULT 0 COMMENT '文档过长，是否只总结了前面的部分',
+    sources      MEDIUMTEXT      NOT NULL COMMENT '出处片段（JSON 数组，序号即摘要中的 [n]，不含正文）',
+    summary      TEXT            NOT NULL COMMENT '摘要正文（Markdown）',
+    model        VARCHAR(64)     NOT NULL COMMENT '生成摘要的模型',
+    created_at   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '生成时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_doc_focus (doc_id, focus),
+    KEY idx_kb_id (kb_id)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci COMMENT ='文档摘要表（大模型生成结果的缓存，文档变化后重新生成）';

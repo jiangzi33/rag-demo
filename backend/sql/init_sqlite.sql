@@ -101,3 +101,22 @@ CREATE TABLE IF NOT EXISTS document_chunks
 );
 
 CREATE INDEX IF NOT EXISTS idx_chunk_kb_id ON document_chunks (kb_id);
+
+CREATE TABLE IF NOT EXISTS document_summaries
+(
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    doc_id      INTEGER      NOT NULL,
+    kb_id       INTEGER      NOT NULL,
+    focus       VARCHAR(200) NOT NULL DEFAULT '',
+    fingerprint CHAR(64)     NOT NULL,
+    mode        VARCHAR(16)  NOT NULL,
+    stale       TINYINT      NOT NULL DEFAULT 0,
+    truncated   TINYINT      NOT NULL DEFAULT 0,
+    sources     TEXT         NOT NULL,
+    summary     TEXT         NOT NULL,
+    model       VARCHAR(64)  NOT NULL,
+    created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (doc_id, focus)
+);
+
+CREATE INDEX IF NOT EXISTS idx_summary_kb_id ON document_summaries (kb_id);

@@ -222,6 +222,13 @@ a { color: #00b96b; text-decoration: none; }
 .qa-source-no { flex: none; width: 18px; height: 18px; border-radius: 50%; background: #e8f7f0; color: #00b96b;
   display: flex; align-items: center; justify-content: center; font-size: 11px; }
 .qa-source-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.doc-summary { margin-bottom: 20px; padding: 14px 16px; border-radius: 10px; background: #f6fbf8; border: 1px solid #d5efe2; }
+.doc-summary-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 13px; }
+.doc-summary-head strong { font-size: 14px; color: #00a35e; }
+.doc-summary-close { margin-left: auto; }
+.doc-summary-input { display: flex; gap: 8px; margin-bottom: 10px; }
+.doc-summary-tip { margin-bottom: 10px; }
+.doc-summary .qa-answer { font-size: 14px; }
 .qa-input { display: flex; align-items: flex-end; gap: 10px; padding: 12px; border-radius: 12px; background: #fff;
   border: 1px solid #e4e7e6; }
 .qa-input .el-textarea__inner { box-shadow: none !important; padding: 4px 0; font-size: 14px; }

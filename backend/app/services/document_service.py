@@ -9,6 +9,7 @@ from app.core.config import settings
 from app.core.exceptions import BizError, ErrorCode
 from app.mapper import document_chunk_mapper as chunk_mapper
 from app.mapper import document_mapper
+from app.mapper import document_summary_mapper as summary_mapper
 from app.mapper import knowledge_base_mapper as kb_mapper
 from app.mapper import invite_link_mapper, permission_mapper, user_mapper
 from app.models.document import Document
@@ -100,6 +101,7 @@ def delete(conn: Connection, user: User, kb_id: int, doc_id: int) -> None:
     permission_mapper.delete_by_target(conn, TargetType.DOC, doc.id)
     invite_link_mapper.delete_by_target(conn, TargetType.DOC, doc.id)
     chunk_mapper.delete_by_doc_id(conn, doc.id)
+    summary_mapper.delete_by_doc_id(conn, doc.id)
     document_mapper.delete_by_id(conn, doc.id)
     kb_mapper.touch(conn, kb_id)
     conn.commit()

@@ -1,13 +1,18 @@
+from functools import partial
+
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Query, UploadFile
+from fastapi.responses import StreamingResponse
 from sqlalchemy import Connection
 
 from app.api.deps import get_current_user
+from app.core.exceptions import BizError, ErrorCode
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.document import ChunkOut, DocumentBriefOut, DocumentIn, DocumentOut, ImageOut
+from app.rag.llm import ChatError, get_chat_client
+from app.schemas.document import ChunkOut, DocumentBriefOut, DocumentIn, DocumentOut, ImageOut, SummaryIn
 from app.schemas.user import Page, Resp
 from app.services import document_service as doc_service
-from app.services import embedding_service
+from app.services import embedding_service, summary_service
 
 router = APIRouter(prefix="/knowledge-bases/{kb_id}/documents", tags=["文档"])
 
@@ -56,6 +61,34 @@ def detail(kb_id: int, doc_id: int, user: User = Depends(get_current_user), db: 
 @router.get("/{doc_id}/chunks/{chunk_id}", response_model=Resp[ChunkOut], summary="文档的一个切分块（检索结果定位用，需要读权限）")
 def chunk(kb_id: int, doc_id: int, chunk_id: int, user: User = Depends(get_current_user), db: Connection = Depends(get_db)):
     return Resp(data=ChunkOut.model_validate(doc_service.get_chunk(db, user, kb_id, doc_id, chunk_id)))
+
+
+@router.post("/{doc_id}/summary", summary="文档摘要：基于切分块由大模型生成，标注出处片段（需要读权限，text/event-stream 流式返回）")
+def summary(
+    kb_id: int, doc_id: int, body: SummaryIn | None = None,
+    user: User = Depends(get_current_user), db: Connection = Depends(get_db),
+):
+    # 权限、配置和检索的错误在流式响应开始前抛出，按普通接口的 JSON 格式返回
+    body = body or SummaryIn()
+    doc, _ = doc_service.get_readable(db, user, kb_id, doc_id)
+    focus = summary_service.normalize_focus(body.focus)
+    fp = summary_service.fingerprint(db, doc)
+    cached = None if body.refresh else summary_service.get_cached(db, doc, focus, fp)
+    if cached:  # 文档没有变化，直接返回已保存的摘要，不需要大模型
+        events = summary_service.stream_cached(cached)
+    else:
+        try:
+            client = get_chat_client()
+        except ChatError as e:
+            raise BizError(f"文档摘要暂不可用：{e}", ErrorCode.LLM_UNAVAILABLE, 503)
+        sources, plan = summary_service.prepare(db, user, doc, focus or None)
+        save = partial(summary_service.save, doc, focus, fp, plan, sources, model=client.model)  # 完整生成后以摘要全文调用
+        events = summary_service.stream_summary(client, doc, sources, plan, focus or None, on_complete=save)
+    return StreamingResponse(
+        events,
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @router.put("/{doc_id}", response_model=Resp[DocumentOut], summary="编辑文档标题和正文（需要写权限）")

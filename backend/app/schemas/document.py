@@ -46,6 +46,12 @@ class DocumentBriefOut(BaseModel):
     updated_at: datetime
 
 
+class SummaryIn(BaseModel):
+    """文档摘要；关注点折叠空白后作为缓存的键（summary_service.normalize_focus）"""
+    focus: str | None = Field(None, max_length=200, description="只总结与之相关的内容，如“部署步骤”；不填总结全文")
+    refresh: bool = Field(False, description="忽略已保存的摘要，重新生成并覆盖")
+
+
 class ChunkOut(BaseModel):
     """文档切分块：从检索结果跳转到文档时，用于在正文中定位并高亮"""
     model_config = ConfigDict(from_attributes=True)

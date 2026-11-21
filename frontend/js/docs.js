@@ -197,9 +197,128 @@ const clearChunkHighlight = (container) => {
   if (canHighlightRange) CSS.highlights.delete(CHUNK_HIGHLIGHT)
 }
 
+// ---------------- 文档摘要 ----------------
+// 基于文档的切分块由大模型生成摘要（流式），[1] [2] 为出处片段，点击在正文中高亮；可填关注点只总结相关内容。
+// streamSse / renderAnswer / sourceLink 定义在 qa.js
+const SUMMARY_MODE_LABEL = { full: '全文', map_reduce: '长文档分段提炼后合并', focus: '按关注点检索相关片段' }
+
+const DocSummary = {
+  props: { kbId: { required: true }, docId: { required: true } },
+  emits: ['close'],
+  template: `
+  <div class="doc-summary">
+    <div class="doc-summary-head">
+      <strong>AI 摘要</strong>
+      <span v-if="mode" class="muted">基于{{ SUMMARY_MODE_LABEL[mode] }} · {{ sources.length }} 个片段</span>
+      <span v-if="cachedAt" class="muted" :title="'生成模型：' + cachedModel">· 已保存的摘要，生成于 {{ formatTime(cachedAt) }}</span>
+      <el-button link class="doc-summary-close" @click="close">收起</el-button>
+    </div>
+    <div class="doc-summary-input">
+      <el-input v-model="focus" maxlength="200" clearable placeholder="关注点（可选），如“部署步骤”，不填总结全文"
+                @keydown.enter.prevent="generate(false)" />
+      <el-button v-if="streaming" @click="stop">停止</el-button>
+      <template v-else>
+        <el-button type="primary" @click="generate(false)">生成摘要</el-button>
+        <!-- 已保存的摘要默认直接返回，重新生成时跳过并覆盖 -->
+        <el-button v-if="content" @click="generate(true)">重新生成</el-button>
+      </template>
+    </div>
+    <div v-if="status === 'preparing'" class="muted qa-status"><span class="qa-dots"></span>正在读取文档片段…</div>
+    <div v-else-if="status === 'mapping'" class="muted qa-status">
+      <span class="qa-dots"></span>文档较长，正在分段提炼要点（{{ progress.done }}/{{ progress.total }}）…
+    </div>
+    <div v-else-if="status === 'thinking'" class="muted qa-status"><span class="qa-dots"></span>正在生成摘要…</div>
+    <el-alert v-if="stale" type="info" :closable="false" show-icon class="doc-summary-tip"
+              title="文档编辑后尚未重建检索索引，摘要基于当前正文，出处只能定位到文档" />
+    <el-alert v-if="truncated" type="warning" :closable="false" show-icon class="doc-summary-tip"
+              title="文档过长，只总结了前面的部分" />
+    <div v-if="content" class="qa-answer doc-content" :class="{ streaming: status === 'streaming' }"
+         v-html="renderAnswer(content, sources)"></div>
+    <el-alert v-if="error" :title="error" type="error" :closable="false" show-icon class="qa-error" />
+    <div v-if="status === 'stopped'" class="muted qa-status">已停止生成</div>
+  </div>`,
+  setup(props, { emit }) {
+    const focus = ref('')
+    const content = ref('')
+    const sources = ref([])
+    const mode = ref('')
+    const stale = ref(false)
+    const truncated = ref(false)
+    const status = ref('')
+    const error = ref('')
+    const cachedAt = ref('')
+    const cachedModel = ref('')
+    const progress = Vue.reactive({ done: 0, total: 0 })
+    const streaming = computed(() => ['preparing', 'mapping', 'thinking', 'streaming'].includes(status.value))
+    let controller = null
+
+    const generate = async (refresh) => {
+      if (streaming.value) return
+      Object.assign(progress, { done: 0, total: 0 })
+      content.value = error.value = mode.value = cachedAt.value = cachedModel.value = ''
+      sources.value = []
+      stale.value = truncated.value = false
+      status.value = 'preparing'
+      controller = new AbortController()
+      const body = { refresh, ...(focus.value.trim() ? { focus: focus.value.trim() } : {}) }
+      try {
+        await streamSse(`/knowledge-bases/${props.kbId}/documents/${props.docId}/summary`, body, controller.signal, (e) => {
+          if (e.type === 'sources') {
+            sources.value = e.sources
+            mode.value = e.mode
+            stale.value = e.stale
+            truncated.value = e.truncated
+            if (e.cached) {
+              cachedAt.value = e.created_at
+              cachedModel.value = e.model
+            }
+            status.value = e.mode === 'map_reduce' && !e.cached ? 'mapping' : 'thinking'
+          } else if (e.type === 'progress') {
+            Object.assign(progress, { done: e.done, total: e.total })
+            if (e.done === e.total) status.value = 'thinking'
+          } else if (e.type === 'delta') {
+            content.value += e.text
+            status.value = 'streaming'
+          } else if (e.type === 'error') {
+            error.value = e.message
+            status.value = 'error'
+          } else if (e.type === 'done') {
+            status.value = 'done'
+          }
+        })
+        if (!['done', 'error'].includes(status.value)) {
+          status.value = 'error'
+          error.value = '连接意外中断，摘要可能不完整'
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          status.value = 'stopped'
+        } else {
+          status.value = 'error'
+          error.value = err.message || '网络异常'
+        }
+      } finally {
+        controller = null
+      }
+    }
+    const stop = () => controller?.abort()
+    const close = () => {
+      stop()
+      emit('close')
+    }
+
+    onMounted(() => generate(false))
+    Vue.onBeforeUnmount(stop)
+    return {
+      SUMMARY_MODE_LABEL, focus, content, sources, mode, stale, truncated, status, error, cachedAt, cachedModel, progress,
+      streaming, generate, stop, close, renderAnswer, formatTime,
+    }
+  },
+}
+
 // ---------------- 文档阅读 ----------------
 const DocViewPage = {
-  components: { DocBreadcrumb, PermTag, PendingTag, PermissionDrawer, ApplyPermissionDialog, NoAccess },
+  components: { DocBreadcrumb, PermTag, PendingTag, PermissionDrawer, ApplyPermissionDialog, NoAccess, DocSummary },
   template: `
   <div class="page doc-page">
     <doc-breadcrumb :kb="kb" :current="doc?.title || '文档'" />
@@ -209,6 +328,7 @@ const DocViewPage = {
           <h1 class="doc-title">{{ doc.title }}</h1>
           <div class="doc-actions">
             <el-button v-if="can('write')" type="primary" @click="$router.push(kbPath + '/docs/' + doc.id + '/edit')">编辑</el-button>
+            <el-button v-if="!empty" :disabled="summarizing" @click="summarizing = true">AI 摘要</el-button>
             <el-button v-if="can('manage')" @click="members = true">权限</el-button>
             <el-button v-if="!can('manage') && doc.pending_permission" disabled>
               {{ PERMISSION_TYPE_LABEL[doc.pending_permission] }}权限审批中
@@ -229,6 +349,7 @@ const DocViewPage = {
           <pending-tag :perm="doc.pending_permission" />
         </div>
         <el-divider />
+        <doc-summary v-if="summarizing" :key="doc.updated_at" :kb-id="kbId" :doc-id="doc.id" @close="summarizing = false" />
         <div v-if="chunkNotice" class="chunk-notice">
           <span>已定位到检索片段<template v-if="chunkNotice !== true">：{{ chunkNotice }}</template></span>
           <el-button link type="primary" @click="clearChunk">取消高亮</el-button>
@@ -263,6 +384,7 @@ const DocViewPage = {
 
     const members = ref(false)
     const applying = ref(false)
+    const summarizing = ref(false)
     const can = (need) => hasPerm(doc.value?.my_permission, need)
 
     // 检索结果定位：?chunk=切分块 id
@@ -316,8 +438,8 @@ const DocViewPage = {
 
     onMounted(load)
     return {
-      PERMISSION_TYPE_LABEL, kb, doc, docId, loading, forbidden, html, empty, kbPath, members, applying, can, canDeleteDoc,
-      remove, formatTime, contentEl, chunkNotice, clearChunk,
+      PERMISSION_TYPE_LABEL, kb, doc, kbId, docId, loading, forbidden, html, empty, kbPath, members, applying, summarizing,
+      can, canDeleteDoc, remove, formatTime, contentEl, chunkNotice, clearChunk,
     }
   },
 }

@@ -5,8 +5,10 @@
     python -m scripts.build_eval_set generate -n 50 --kb-ids 1 2 --append
     python -m scripts.build_eval_set judge                           # 用大模型判定各检索配置的候选片段，补全相关片段
     python -m scripts.build_eval_set judge --pool-k 20 --force       # 已判定过的问题也重新判定
+    python -m scripts.build_eval_set reference                       # 根据相关片段生成参考答案和要点（生成评估用）
 
 judge 后建议人工抽查评测集；之后用 python -m scripts.eval_retrieval 评估。说明见 app/services/retrieval_eval_service.py。
+reference 应在 judge 之后运行（相关片段补全后要点才完整），之后用 python -m scripts.eval_generation 评估生成效果。
 """
 import argparse
 import logging
@@ -18,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app.core.config import BACKEND_DIR  # noqa: E402
 from app.db.session import engine  # noqa: E402
 from app.rag.llm import ChatError, get_chat_client  # noqa: E402
+from app.services import generation_eval_service as gen  # noqa: E402
 from app.services import retrieval_eval_service as ev  # noqa: E402
 
 DEFAULT_DATASET = BACKEND_DIR / "eval" / "retrieval_eval.jsonl"
@@ -63,6 +66,30 @@ def judge(args) -> int:
     return 1 if failed else 0
 
 
+def reference(args) -> int:
+    path = Path(args.dataset)
+    cases = ev.load_dataset(path)
+    client = get_chat_client()
+    todo = [c for c in cases if args.force or not c.reference_answer]
+    done = skipped = failed = 0
+    with engine.connect() as conn:
+        for i, case in enumerate(todo, 1):
+            try:
+                ok = gen.build_reference(conn, client, case)
+            except (ChatError, ValueError) as e:
+                failed += 1
+                print(f"[{i}/{len(todo)}] {case.id} 生成失败：{e}", file=sys.stderr)
+                continue
+            done, skipped = done + ok, skipped + (not ok)
+            print(f"[{i}/{len(todo)}] {case.id} {f'{len(case.key_points)} 个要点' if ok else '资料不能回答，跳过'} {case.question}")
+            if i % 10 == 0:
+                ev.save_dataset(path, cases)  # 中途中断时保留已生成的结果
+    ev.save_dataset(path, cases)
+    print(f"完成：生成 {done} 个参考答案，{skipped} 个跳过，{failed} 个失败 → {path}")
+    print("建议人工抽查参考答案和要点，之后用 python -m scripts.eval_generation 评估")
+    return 1 if failed else 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="构建 RAG 检索评测集")
     parser.add_argument("--dataset", default=str(DEFAULT_DATASET), help=f"评测集路径，默认 {DEFAULT_DATASET}")
@@ -81,6 +108,10 @@ def main() -> int:
     j.add_argument("--user", help="以哪个用户检索，默认第一个系统管理员")
     j.add_argument("--force", action="store_true", help="已判定过的问题也重新判定")
     j.set_defaults(func=judge)
+
+    r = sub.add_parser("reference", help="根据相关片段让大模型生成参考答案和要点")
+    r.add_argument("--force", action="store_true", help="已有参考答案的问题也重新生成")
+    r.set_defaults(func=reference)
 
     args = parser.parse_args()
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")

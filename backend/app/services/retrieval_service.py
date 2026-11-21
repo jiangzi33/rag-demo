@@ -91,10 +91,11 @@ class Retriever:
 
     def retrieve(
         self, conn: Connection, user: User, question: str, kb_ids: list[int], top_k: int | None = None,
-        keyword_text: str | None = None,
+        keyword_text: str | None = None, within_doc_ids: list[int] | None = None,
     ) -> list[RetrievedChunk]:
         """在用户有读权限的范围内，检索与问题最相似的 top_k 个文档片段，按相似度从高到低排序。
-        keyword_text：关键词检索使用的文本（如问题改写后附加的同义词），不填使用 question。"""
+        keyword_text：关键词检索使用的文本（如问题改写后附加的同义词），不填使用 question。
+        within_doc_ids：只在这些文档中检索（如文档摘要），调用方需已校验这些文档的读权限。"""
         if not settings.EMBEDDING_ENABLED:
             raise _unavailable("未开启向量化（EMBEDDING_ENABLED）")
         q = normalize_question(question)
@@ -104,7 +105,10 @@ class Retriever:
         if not kb_ids:
             raise BizError("请选择要提问的知识库", ErrorCode.PARAM_INVALID)
 
-        full_kb_ids, doc_ids = access.readable_scope(conn, user, kb_ids)
+        if within_doc_ids is not None:
+            full_kb_ids, doc_ids = [], list(within_doc_ids)
+        else:
+            full_kb_ids, doc_ids = access.readable_scope(conn, user, kb_ids)
         if not full_kb_ids and not doc_ids:
             if settings.RAG_LOG_RESULTS:
                 logger.info('检索 user=%s query="%s" kb_ids=%s：没有可读的文档，返回 0 条', user.id, q, kb_ids)
