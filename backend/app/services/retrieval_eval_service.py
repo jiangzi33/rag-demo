@@ -145,6 +145,8 @@ def run(
         "ks": ks,
         "settings": {
             "embedding_model": settings.OLLAMA_EMBEDDING_MODEL,
+            "embedding_dimensions": settings.EMBEDDING_DIMENSIONS or "默认",
+            "milvus_collection": settings.MILVUS_COLLECTION,
             "chunk_size": settings.RAG_CHUNK_SIZE,
             "chunk_overlap": settings.RAG_CHUNK_OVERLAP,
             "hybrid_candidates": settings.RAG_HYBRID_CANDIDATES,
